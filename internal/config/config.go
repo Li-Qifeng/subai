@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/user/subai/internal/template"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,6 +36,7 @@ type Output struct {
 	Target string `yaml:"target"`          // clash, base64, singbox, mixed
 	Path   string `yaml:"path,omitempty"`  // output file path
 	Pretty bool   `yaml:"pretty"`          // pretty-print output
+	Template template.Config `yaml:",inline"` // template config (merged inline)
 }
 
 // Server defines the optional HTTP server configuration.

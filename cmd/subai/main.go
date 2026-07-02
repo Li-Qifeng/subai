@@ -106,6 +106,7 @@ Examples:
 
 func runConvert(cmd *cobra.Command, args []string) error {
 	var proxies parser.ProxyList
+	var cfg *config.Config
 
 	if len(args) > 0 {
 		// Inline mode: detect proxy URIs vs subscription URLs
@@ -133,7 +134,8 @@ func runConvert(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		// Config mode
-		cfg, err := config.Load(cfgFile)
+		var err error
+		cfg, err = config.Load(cfgFile)
 		if err != nil {
 			return fmt.Errorf("load config %s: %w", cfgFile, err)
 		}
@@ -187,7 +189,12 @@ func runConvert(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no proxies found")
 	}
 
-	eng := converter.New()
+	var eng *converter.Engine
+	if cfg != nil {
+		eng = converter.NewWithTemplate(&cfg.Output.Template)
+	} else {
+		eng = converter.New()
+	}
 	data, err := eng.Convert(proxies, target)
 	if err != nil {
 		return fmt.Errorf("convert: %w", err)

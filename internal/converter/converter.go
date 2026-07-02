@@ -8,34 +8,70 @@ import (
 	"strings"
 
 	"github.com/user/subai/internal/parser"
+	"github.com/user/subai/internal/template"
 	"gopkg.in/yaml.v3"
 )
 
 // Engine is the conversion engine.
-type Engine struct{}
+type Engine struct {
+	tmplCfg *template.Config // optional template config
+}
 
-// New creates a new Engine.
+// New creates a new Engine with default (basic) template.
 func New() *Engine {
-	return &Engine{}
+	tmpl, _ := template.Builtin("basic")
+	return &Engine{tmplCfg: tmpl}
+}
+
+// NewWithTemplate creates an Engine with a specific template config.
+// If cfg is nil, uses basic template. If cfg.Template is a built-in name,
+// loads that built-in and merges any custom overrides.
+func NewWithTemplate(cfg *template.Config) *Engine {
+	if cfg == nil {
+		tmpl, _ := template.Builtin("basic")
+		return &Engine{tmplCfg: tmpl}
+	}
+
+	// If a built-in template is referenced but no custom groups/rules, use built-in directly
+	if cfg.Template != "" && template.HasTemplate(cfg.Template) {
+		if len(cfg.ProxyGroups) == 0 && len(cfg.RuleSets) == 0 {
+			builtin, err := template.Builtin(cfg.Template)
+			if err == nil {
+				return &Engine{tmplCfg: builtin}
+			}
+		}
+		// Merge: load built-in as base, then override with custom
+		base, err := template.Builtin(cfg.Template)
+		if err == nil {
+			if len(cfg.ProxyGroups) > 0 {
+				base.ProxyGroups = cfg.ProxyGroups
+			}
+			if len(cfg.RuleSets) > 0 {
+				base.RuleSets = cfg.RuleSets
+			}
+			return &Engine{tmplCfg: base}
+		}
+	}
+
+	return &Engine{tmplCfg: cfg}
 }
 
 // Convert converts a list of proxies to the target format.
-// target can be: clash, base64, mixed
 func (e *Engine) Convert(proxies []parser.Proxy, target string) ([]byte, error) {
 	switch target {
 	case "clash":
-		return toClash(proxies)
+		return e.toClash(proxies)
 	case "base64":
 		return toBase64(proxies)
 	case "mixed":
-		return toMixed(proxies)
+		return e.toMixed(proxies)
 	default:
 		return nil, fmt.Errorf("unknown target format: %s", target)
 	}
 }
 
-// toClash generates a complete Clash-compatible YAML configuration.
-func toClash(proxies []parser.Proxy) ([]byte, error) {
+// toClash generates a Clash-compatible YAML with template-based proxy groups and rules.
+func (e *Engine) toClash(proxies []parser.Proxy) ([]byte, error) {
 	out := map[string]interface{}{
 		"port":                 7890,
 		"socks-port":           7891,
@@ -46,46 +82,14 @@ func toClash(proxies []parser.Proxy) ([]byte, error) {
 		"proxies":              proxies,
 	}
 
-	if len(proxies) > 0 {
-		names := make([]string, len(proxies))
-		for i, p := range proxies {
-			if p.Name != "" {
-				names[i] = p.Name
-			} else {
-				names[i] = fmt.Sprintf("%s-%d", p.Server, p.Port)
-			}
-		}
+	// Build from template
+	result := template.Build(e.tmplCfg, proxies)
 
-		out["proxy-groups"] = []map[string]interface{}{
-			{
-				"name":    "Proxy",
-				"type":    "select",
-				"proxies": names,
-			},
-			{
-				"name":     "Auto",
-				"type":     "url-test",
-				"proxies":  names,
-				"url":      "http://www.gstatic.com/generate_204",
-				"interval": 300,
-			},
-			{
-				"name":     "Fallback",
-				"type":     "fallback",
-				"proxies":  names,
-				"url":      "http://www.gstatic.com/generate_204",
-				"interval": 300,
-			},
-			{
-				"name":    "Final",
-				"type":    "select",
-				"proxies": []string{"Proxy", "Auto", "DIRECT"},
-			},
-		}
+	if len(result.ProxyGroups) > 0 {
+		out["proxy-groups"] = result.ProxyGroups
 	}
-
-	out["rules"] = []string{
-		"MATCH,Final",
+	if len(result.Rules) > 0 {
+		out["rules"] = result.Rules
 	}
 
 	return yaml.Marshal(out)
@@ -108,8 +112,8 @@ func toBase64(proxies []parser.Proxy) ([]byte, error) {
 }
 
 // toMixed generates both Clash config and base64 output combined.
-func toMixed(proxies []parser.Proxy) ([]byte, error) {
-	clashBytes, err := toClash(proxies)
+func (e *Engine) toMixed(proxies []parser.Proxy) ([]byte, error) {
+	clashBytes, err := e.toClash(proxies)
 	if err != nil {
 		return nil, fmt.Errorf("clash section: %w", err)
 	}
