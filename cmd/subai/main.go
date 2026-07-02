@@ -106,7 +106,11 @@ Examples:
 
 func runConvert(cmd *cobra.Command, args []string) error {
 	var proxies parser.ProxyList
+	// Preload config if file exists (for template settings even in inline mode)
 	var cfg *config.Config
+	if _, err := os.Stat(cfgFile); err == nil {
+		cfg, _ = config.Load(cfgFile)
+	}
 
 	if len(args) > 0 {
 		// Inline mode: detect proxy URIs vs subscription URLs
@@ -190,7 +194,7 @@ func runConvert(cmd *cobra.Command, args []string) error {
 	}
 
 	var eng *converter.Engine
-	if cfg != nil {
+	if cfg != nil && (cfg.Output.Template.Template != "" || len(cfg.Output.Template.ProxyGroups) > 0) {
 		eng = converter.NewWithTemplate(&cfg.Output.Template)
 	} else {
 		eng = converter.New()
