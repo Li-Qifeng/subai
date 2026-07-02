@@ -1,0 +1,21 @@
+# Binaries
+/subai
+/subai.exe
+/subai-*
+
+# Build output
+/testdata/output*.yaml
+/testdata/output*.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+/tmp/

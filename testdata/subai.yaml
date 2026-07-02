@@ -1,0 +1,17 @@
+sources:
+  - name: "Free-Test"
+    url: "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity.txt"
+    user-agent: "ClashMeta/1.18"
+rules:
+  include:
+    - "🇭🇰|HK|Hong"
+    - "🇯🇵|JP|Japan"
+  exclude:
+    - "过期"
+    - "剩余"
+output:
+  target: "clash"
+  pretty: true
+server:
+  enabled: false
+  listen: ":8080"
