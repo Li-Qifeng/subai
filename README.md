@@ -59,6 +59,7 @@ sudo mv subai-linux-amd64 /usr/local/bin/subai
 | `dry-run` | Preview without writing output | Verification step |
 | `source add/list/remove` | Manage subscription sources | Configure inputs |
 | **`login`** | **Auto-login to panel, get subscribe URL** | **One-click setup** |
+| **`template list`** | **List available built-in templates** | **Choose rule strategy** |
 | `serve` | HTTP server for client subscriptions | Client delivery |
 | `version` | Show version | - |
 
@@ -138,7 +139,8 @@ output:
   target: "clash"        # clash, base64, mixed
   pretty: true
   # 模板配置（可选）
-  template: "acl4ssr_mini"              # 内置模板名
+  template: "loyalsoldier"              # 内置模板名
+  fetch_rules: true                     # true=内联展开规则（推荐）, false=RULE-SET引用
   proxy-groups:                         # 自定义代理组（覆盖模板）
     - name: "Proxy"
       type: "select"
@@ -151,6 +153,75 @@ server:
   enabled: true
   listen: ":8080"
   token: "your-api-token"
+```
+
+## 模板与规则集
+
+### 内置模板
+
+列出可用模板：
+```bash
+subai template list
+```
+
+| 模板名 | 来源 | 策略组数 | 规则集数 | 说明 |
+|--------|------|----------|----------|------|
+| `basic` | built-in | 4 | 1 | 简单 select/url-test/fallback |
+| `acl4ssr_full` | [ACL4SSR](https://github.com/ACL4SSR/ACL4SSR) ⭐18.5k | 13 | 16 | 完整规则（Netflix/YouTube/Google/Steam等） |
+| `acl4ssr_lite` | [ACL4SSR](https://github.com/ACL4SSR/ACL4SSR) | 5 | 7 | 精简版，仅有选择/直连/拦截 |
+| `loyalsoldier` | [Loyalsoldier/clash-rules](https://github.com/Loyalsoldier/clash-rules) ⭐10k | 6 | 8 | 精选规则，直连/代理/拦截覆盖全面 |
+
+### 规则获取方式
+
+模板中的规则集（rule-sets）通过 **jsDelivr CDN** 从 GitHub 源拉取，确保：
+
+- 🚀 **高速访问** — jsDelivr 全球 CDN 加速
+- 🔄 **自动更新** — 永远指向上游最新版本，无需手动更新模板
+- 🛡️ **高可用** — 比 raw.githubusercontent.com 更稳定
+
+### 展开模式 vs 引用模式
+
+#### 引用模式（默认）
+
+```yaml
+output:
+  template: "loyalsoldier"
+  fetch_rules: false   # 默认
+```
+
+生成 `RULE-SET,URL,GroupName` 指令，**客户端启动时自行拉取**规则文件。
+✅ 输出文件小，规则自动更新
+❌ 客户端必须支持 RULE-SET（Clash.Meta / Mihomo）
+
+#### 展开模式（推荐）
+
+```yaml
+output:
+  template: "loyalsoldier"
+  fetch_rules: true    # 展开内联
+```
+
+`subai convert` 时**主动拉取**所有规则文件，解析后**内联嵌入**到输出配置中。
+✅ 单文件部署，所有客户端兼容
+✅ AI 可审计全部规则
+✅ 规则在转换时锁定，不受上游变更影响
+❌ 输出文件较大（~500KB+，取决于模板）
+
+### 自定义规则集
+
+```yaml
+output:
+  template: loyalsoldier
+  fetch_rules: true
+  proxy-groups:
+    - name: "Proxy"
+      type: "select"
+      filter: ".*"
+  rule-sets:
+    - group: "Proxy"
+      url: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ProxyGFWlist.list"
+    - group: "Proxy"
+      rule: "MATCH,Proxy"
 ```
 
 ## 面板登录支持
