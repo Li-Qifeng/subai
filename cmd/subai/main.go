@@ -115,30 +115,91 @@ Examples:
 	// Template command
 	templateCmd := &cobra.Command{
 		Use:   "template",
-		Short: "List and inspect built-in templates",
+		Short: "List, sync, and manage templates",
+		Long: `Manage templates for subscription conversion.
+
+Built-in templates (always available):
+  basic, acl4ssr_full, acl4ssr_lite, loyalsoldier
+
+Remote templates (synced from GitHub, 20+ variants):
+  Run 'subai template sync' to fetch the latest templates.
+  Run 'subai template list' to see all available templates.
+
+Templates are cached locally and auto-refresh when stale.`,
 	}
+
 	templateCmd.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "List available built-in templates",
+		Short: "List all available templates (built-in + cached remote)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("Available templates:")
+			// Built-in templates
+			fmt.Println("━━ Built-in templates ━━")
 			for _, name := range template.AvailableTemplates() {
 				desc := ""
 				switch name {
 				case "basic":
 					desc = "Simple select/url-test/fallback groups"
 				case "acl4ssr_full":
-					desc = "Full ACL4SSR rules (16 proxy groups, 16 rule sets)"
+					desc = "Full ACL4SSR rules (13 proxy groups, 16 rule sets)"
 				case "acl4ssr_lite":
 					desc = "Lite ACL4SSR rules (5 groups, 7 rule sets)"
 				case "loyalsoldier":
 					desc = "Loyalsoldier/clash-rules (6 groups, 8 rule sets)"
 				}
-				fmt.Printf("  %-20s %s\n", name, desc)
+				fmt.Printf("  %-32s %s\n", name, desc)
 			}
+
+			// Cached remote templates
+			cached, err := template.ListCachedTemplates()
+			if err != nil || cached == nil || len(cached) == 0 {
+				fmt.Println()
+				fmt.Println("No remote templates cached. Run 'subai template sync' to fetch.")
+				return nil
+			}
+
+			// Group by category
+			byCat := make(map[string][]template.TemplateIndexEntry)
+			for _, entry := range cached {
+				if entry.Category == "" {
+					entry.Category = "other"
+				}
+				byCat[entry.Category] = append(byCat[entry.Category], entry)
+			}
+
 			fmt.Println()
-			fmt.Println("Use `fetch_rules: true` in config to expand rule URLs inline.")
-			fmt.Println("Rule sources: jsDelivr CDN (auto-updates from GitHub upstream)")
+			fmt.Println("━━ Remote templates (synced) ━━")
+			for cat, entries := range byCat {
+				fmt.Printf("  [%s]\n", cat)
+				for _, e := range entries {
+					fmt.Printf("  %-32s %s\n", e.Name, e.Description)
+				}
+				fmt.Println()
+			}
+
+			fmt.Println("Use 'subai convert -t clash' or set 'template: <name>' in config.")
+			return nil
+		},
+	})
+
+	templateCmd.AddCommand(&cobra.Command{
+		Use:   "sync [url]",
+		Short: "Sync latest templates from remote repository",
+		Long: `Fetch the latest template list and files from the remote template repository.
+
+By default, templates are fetched from:
+  https://raw.githubusercontent.com/Li-Qifeng/subai/main/templates
+
+A custom URL can be provided as an argument.`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			remoteURL := template.DefaultRemoteURL
+			if len(args) > 0 {
+				remoteURL = args[0]
+			}
+			template.SetLogWriter(os.Stderr)
+			if err := template.SyncTemplates(remoteURL); err != nil {
+				return fmt.Errorf("sync failed: %w", err)
+			}
 			return nil
 		},
 	})

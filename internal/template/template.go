@@ -49,7 +49,14 @@ type BuildResult struct {
 }
 
 // Builtin returns a built-in template config by name.
+// It checks the local cache first (if synced), then falls back to the compiled-in template.
 func Builtin(name string) (*Config, error) {
+	// Try cached template first (from remote sync)
+	if cfg, err := LoadCachedTemplate(name); err == nil {
+		return cfg, nil
+	}
+
+	// Fall back to compiled-in builtins
 	switch name {
 	case "basic":
 		return basicTemplate(), nil
@@ -60,8 +67,33 @@ func Builtin(name string) (*Config, error) {
 	case "loyalsoldier":
 		return loyalsoldierTemplate(), nil
 	default:
-		return nil, fmt.Errorf("unknown built-in template: %q (available: basic, acl4ssr_full, acl4ssr_lite, loyalsoldier)", name)
+		return nil, fmt.Errorf("unknown template: %q (available: basic, acl4ssr_full, acl4ssr_lite, loyalsoldier, or run 'subai template sync' to fetch more)", name)
 	}
+}
+
+// AvailableCachedTemplates returns all available template names including cached remote ones.
+func AvailableCachedTemplates() []string {
+	builtin := AvailableTemplates()
+
+	cached, err := ListCachedTemplates()
+	if err != nil || cached == nil {
+		return builtin
+	}
+
+	// Merge, deduplicate
+	seen := make(map[string]bool)
+	var all []string
+	for _, name := range builtin {
+		seen[name] = true
+		all = append(all, name)
+	}
+	for _, entry := range cached {
+		if !seen[entry.Name] {
+			seen[entry.Name] = true
+			all = append(all, entry.Name)
+		}
+	}
+	return all
 }
 
 // Build generates proxy groups and rules from a template config and proxy list.

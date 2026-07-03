@@ -1,0 +1,156 @@
+[
+  {
+    "name": "acl4ssr_online",
+    "title": "ACL4SSR Online",
+    "description": "ACL4SSR Online 默认版，分组比较全",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online.yaml"
+  },
+  {
+    "name": "acl4ssr_online_adblockplus",
+    "title": "ACL4SSR Online AdblockPlus",
+    "description": "ACL4SSR Online 更多去广告",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_adblockplus.yaml"
+  },
+  {
+    "name": "acl4ssr_online_full",
+    "title": "ACL4SSR Online Full",
+    "description": "ACL4SSR Online 全分组 重度用户使用",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_full.yaml"
+  },
+  {
+    "name": "acl4ssr_online_full_adblockplus",
+    "title": "ACL4SSR Online Full AdblockPlus",
+    "description": "ACL4SSR Online 全分组 更多去广告 重度用户使用",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_full_adblockplus.yaml"
+  },
+  {
+    "name": "acl4ssr_online_full_google",
+    "title": "ACL4SSR Online Full Google",
+    "description": "ACL4SSR Online 全分组 谷歌细分",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_full_google.yaml"
+  },
+  {
+    "name": "acl4ssr_online_full_multimode",
+    "title": "ACL4SSR Online Full MultiMode",
+    "description": "ACL4SSR Online 全分组 多模式 重度用户使用",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_full_multimode.yaml"
+  },
+  {
+    "name": "acl4ssr_online_full_netflix",
+    "title": "ACL4SSR Online Full Netflix",
+    "description": "ACL4SSR Online 全分组 奈飞全量",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_full_netflix.yaml"
+  },
+  {
+    "name": "acl4ssr_online_full_noauto",
+    "title": "ACL4SSR Online Full NoAuto",
+    "description": "ACL4SSR Online 全分组 无自动测速 重度用户使用",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_full_noauto.yaml"
+  },
+  {
+    "name": "acl4ssr_online_mini",
+    "title": "ACL4SSR Online Mini",
+    "description": "ACL4SSR Online 精简版",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_mini.yaml"
+  },
+  {
+    "name": "acl4ssr_online_mini_adblockplus",
+    "title": "ACL4SSR Online Mini AdblockPlus",
+    "description": "ACL4SSR Online 精简版 更多去广告",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_mini_adblockplus.yaml"
+  },
+  {
+    "name": "acl4ssr_online_mini_fallback",
+    "title": "ACL4SSR Online Mini Fallback",
+    "description": "ACL4SSR Online 精简版 带故障转移",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_mini_fallback.yaml"
+  },
+  {
+    "name": "acl4ssr_online_mini_multicountry",
+    "title": "ACL4SSR Online Mini MultiCountry",
+    "description": "ACL4SSR Online 精简版 带港美日国家分组",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_mini_multicountry.yaml"
+  },
+  {
+    "name": "acl4ssr_online_mini_multimode",
+    "title": "ACL4SSR Online Mini MultiMode",
+    "description": "ACL4SSR Online 精简版 自动测速/故障转移/负载均衡",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_mini_multimode.yaml"
+  },
+  {
+    "name": "acl4ssr_online_mini_noauto",
+    "title": "ACL4SSR Online Mini NoAuto",
+    "description": "ACL4SSR Online 精简版 不带自动测速",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_mini_noauto.yaml"
+  },
+  {
+    "name": "acl4ssr_online_noauto",
+    "title": "ACL4SSR Online NoAuto",
+    "description": "ACL4SSR Online 无自动测速",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_noauto.yaml"
+  },
+  {
+    "name": "acl4ssr_online_noreject",
+    "title": "ACL4SSR Online NoReject",
+    "description": "ACL4SSR Online 无广告拦截规则",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_online_noreject.yaml"
+  },
+  {
+    "name": "basic",
+    "title": "Basic",
+    "description": "基础模板，仅含节点选择/自动测速/Fallback/兜底",
+    "category": "core",
+    "file": "basic.yaml"
+  },
+  {
+    "name": "loyalsoldier",
+    "title": "Loyalsoldier",
+    "description": "Loyalsoldier/clash-rules 风格 (27.4k stars)",
+    "category": "community",
+    "file": "loyalsoldier.yaml"
+  },
+  {
+    "name": "special_basic",
+    "title": "Special Basic",
+    "description": "仅GEOIP CN + Final",
+    "category": "special",
+    "file": "special_basic.yaml"
+  },
+  {
+    "name": "special_netease_unblock",
+    "title": "Special Netease Unblock",
+    "description": "网易云音乐解锁 (仅规则, No-Urltest)",
+    "category": "special",
+    "file": "special_netease_unblock.yaml"
+  },
+  {
+    "name": "universal_no_urltest",
+    "title": "Universal No-Urltest",
+    "description": "通用模板 无自动测速",
+    "category": "universal",
+    "file": "universal_no_urltest.yaml"
+  },
+  {
+    "name": "universal_urltest",
+    "title": "Universal Urltest",
+    "description": "通用模板 带自动测速",
+    "category": "universal",
+    "file": "universal_urltest.yaml"
+  }
+]
