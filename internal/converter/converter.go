@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/user/subai/internal/parser"
@@ -83,6 +84,7 @@ func (e *Engine) toClash(proxies []parser.Proxy) ([]byte, error) {
 	}
 
 	// Build from template
+	template.SetLogWriter(os.Stderr)
 	result := template.Build(e.tmplCfg, proxies)
 
 	if len(result.ProxyGroups) > 0 {

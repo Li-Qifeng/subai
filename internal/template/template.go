@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 
@@ -28,8 +29,13 @@ type RuleSet struct {
 
 // Config is the template configuration embedded in subai.yaml.
 type Config struct {
-	// Built-in template name: "basic", "acl4ssr_full"
+	// Built-in template name: "basic", "acl4ssr_full", "acl4ssr_lite", etc.
 	Template string `yaml:"template,omitempty"`
+
+	// FetchRules controls whether RULE-SET URLs are fetched and expanded
+	// into inline rules during conversion. Default: false (RULE-SET references).
+	// When true, rule content is downloaded from source URLs and embedded directly.
+	FetchRules bool `yaml:"fetch_rules,omitempty"`
 
 	// Custom proxy groups (used when Template is empty or "custom")
 	ProxyGroups []ProxyGroup `yaml:"proxy_groups,omitempty"`
@@ -51,12 +57,15 @@ func Builtin(name string) (*Config, error) {
 		return acl4ssrFullTemplate(), nil
 	case "acl4ssr_lite":
 		return acl4ssrLiteTemplate(), nil
+	case "loyalsoldier":
+		return loyalsoldierTemplate(), nil
 	default:
-		return nil, fmt.Errorf("unknown built-in template: %q (available: basic, acl4ssr_full, acl4ssr_lite)", name)
+		return nil, fmt.Errorf("unknown built-in template: %q (available: basic, acl4ssr_full, acl4ssr_lite, loyalsoldier)", name)
 	}
 }
 
 // Build generates proxy groups and rules from a template config and proxy list.
+// If cfg.FetchRules is true, RULE-SET URLs are fetched and expanded inline.
 func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 	result := &BuildResult{
 		ProxyGroups: []map[string]interface{}{},
@@ -122,7 +131,23 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 		result.ProxyGroups = append(result.ProxyGroups, group)
 	}
 
+	// Build rules: either inline (fetch) or RULE-SET references
+	if cfg.FetchRules {
+		// Fetch and expand all RULE-SET URLs into inline rules
+		inlineRules, errs := ExpandRuleSets(cfg.RuleSets)
+		for _, err := range errs {
+			// Log errors but continue with partial results
+			fmt.Fprintf(ruleLogWriter, "  ⚠️  %v\n", err)
+		}
+		result.Rules = append(result.Rules, inlineRules...)
+	}
+
+	// Add non-URL rule sets (inline rules and built-in references)
 	for _, rs := range cfg.RuleSets {
+		if rs.URL != "" && cfg.FetchRules {
+			continue // already expanded above
+		}
+
 		rule := ""
 		if rs.URL != "" {
 			rule = fmt.Sprintf("RULE-SET,%s,%s", rs.URL, rs.Group)
@@ -138,6 +163,19 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 
 	return result
 }
+
+// ruleLogWriter is used for logging rule fetch warnings.
+// Defaults to a no-op writer; can be replaced for testing.
+var ruleLogWriter io.Writer = &noopWriter{}
+
+// SetLogWriter sets the writer for rule fetch logs. Pass os.Stderr for CLI output.
+func SetLogWriter(w io.Writer) {
+	ruleLogWriter = w
+}
+
+type noopWriter struct{}
+
+func (w *noopWriter) Write(p []byte) (int, error) { return len(p), nil }
 
 // Validate checks that the template config is valid.
 func Validate(cfg *Config) []error {
@@ -210,22 +248,22 @@ func acl4ssrFullTemplate() *Config {
 			{Name: "🐟 漏网之鱼", Type: "select", Proxies: []string{"🚀 节点选择", "♻️ 自动选择", "DIRECT"}},
 		},
 		RuleSets: []RuleSet{
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list", Group: "🚫 广告拦截"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanProgramAD.list", Group: "🚫 广告拦截"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyList.list", Group: "🚫 广告拦截"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyListChina.list", Group: "🚫 广告拦截"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Netflix.list", Group: "📺 Netflix"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/YouTube.list", Group: "📽 YouTube"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Google.list", Group: "🌐 谷歌服务"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Apple.list", Group: "🍎 苹果服务"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Twitter.list", Group: "🐦 Twitter"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Telegram.list", Group: "📲 Telegram"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Steam.list", Group: "🎮 游戏平台"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/OpenAi.list", Group: "🤖 OpenAI"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Microsoft.list", Group: "🍎 苹果服务"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaDomain.list", Group: "🇨🇳 国内流量"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaIp.list", Group: "🇨🇳 国内流量"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/LocalAreaNetwork.list", Group: "🇨🇳 国内流量"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanAD.list", Group: "🚫 广告拦截"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanProgramAD.list", Group: "🚫 广告拦截"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanEasyList.list", Group: "🚫 广告拦截"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanEasyListChina.list", Group: "🚫 广告拦截"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Netflix.list", Group: "📺 Netflix"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/YouTube.list", Group: "📽 YouTube"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Google.list", Group: "🌐 谷歌服务"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Apple.list", Group: "🍎 苹果服务"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Twitter.list", Group: "🐦 Twitter"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Telegram.list", Group: "📲 Telegram"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Steam.list", Group: "🎮 游戏平台"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/OpenAi.list", Group: "🤖 OpenAI"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/Microsoft.list", Group: "🍎 苹果服务"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaDomain.list", Group: "🇨🇳 国内流量"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaIp.list", Group: "🇨🇳 国内流量"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list", Group: "🇨🇳 国内流量"},
 			{Rule: "MATCH,🐟 漏网之鱼"},
 		},
 	}
@@ -242,12 +280,42 @@ func acl4ssrLiteTemplate() *Config {
 			{Name: "🐟 漏网之鱼", Type: "select", Proxies: []string{"🚀 节点选择", "♻️ 自动选择", "DIRECT"}},
 		},
 		RuleSets: []RuleSet{
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list", Group: "🛑 全球拦截"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanEasyList.list", Group: "🛑 全球拦截"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ProxyGFWlist.list", Group: "🚀 节点选择"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaDomain.list", Group: "🎯 全球直连"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaIp.list", Group: "🎯 全球直连"},
-			{URL: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/LocalAreaNetwork.list", Group: "🎯 全球直连"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanAD.list", Group: "🛑 全球拦截"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/BanEasyList.list", Group: "🛑 全球拦截"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ProxyGFWlist.list", Group: "🚀 节点选择"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaDomain.list", Group: "🎯 全球直连"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/ChinaIp.list", Group: "🎯 全球直连"},
+			{URL: "https://cdn.jsdelivr.net/gh/ACL4SSR/ACL4SSR@master/Clash/LocalAreaNetwork.list", Group: "🎯 全球直连"},
+			{Rule: "MATCH,🐟 漏网之鱼"},
+		},
+	}
+}
+
+// loyalsoldierTemplate references Loyalsoldier/clash-rules (10k+ stars).
+// Well-maintained, simplified rules optimized for Clash.Meta.
+// Uses jsDelivr CDN for reliable access.
+func loyalsoldierTemplate() *Config {
+	return &Config{
+		Template: "loyalsoldier",
+		ProxyGroups: []ProxyGroup{
+			{Name: "🚀 节点选择", Type: "select", Proxies: []string{"*"}},
+			{Name: "♻️ 自动选择", Type: "url-test", Proxies: []string{"*"}, URL: "http://www.gstatic.com/generate_204", Interval: 300},
+			{Name: "🎯 全球直连", Type: "select", Proxies: []string{"DIRECT", "🚀 节点选择"}},
+			{Name: "🍎 苹果服务", Type: "select", Filter: "Apple|iCloud|🇭🇰|🇸🇬|🇺🇸"},
+			{Name: "📲 Telegram", Type: "select", Filter: "Telegram|🇭🇰|🇸🇬|🇯🇵"},
+			{Name: "🐟 漏网之鱼", Type: "select", Proxies: []string{"🚀 节点选择", "♻️ 自动选择", "DIRECT"}},
+		},
+		RuleSets: []RuleSet{
+			// Direct connection
+			{URL: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt", Group: "🎯 全球直连"},
+			{URL: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt", Group: "🎯 全球直连"},
+			{URL: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt", Group: "🍎 苹果服务"},
+			// Proxy
+			{URL: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt", Group: "🚀 节点选择"},
+			{URL: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt", Group: "🚀 节点选择"},
+			{URL: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt", Group: "📲 Telegram"},
+			// Reject
+			{URL: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt", Group: "🎯 全球直连"},
 			{Rule: "MATCH,🐟 漏网之鱼"},
 		},
 	}
@@ -255,7 +323,7 @@ func acl4ssrLiteTemplate() *Config {
 
 // AvailableTemplates returns a list of built-in template names with descriptions.
 func AvailableTemplates() []string {
-	return []string{"basic", "acl4ssr_full", "acl4ssr_lite"}
+	return []string{"basic", "acl4ssr_full", "acl4ssr_lite", "loyalsoldier"}
 }
 
 // HasTemplate returns true if the given name is a valid built-in template.

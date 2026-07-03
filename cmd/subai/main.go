@@ -16,6 +16,7 @@ import (
 	"github.com/user/subai/internal/parser"
 	"github.com/user/subai/internal/rule"
 	"github.com/user/subai/internal/server"
+	"github.com/user/subai/internal/template"
 )
 
 var (
@@ -110,6 +111,38 @@ Examples:
 	loginCmd.Flags().String("email", "", "Login email")
 	loginCmd.Flags().String("password", "", "Login password")
 	rootCmd.AddCommand(loginCmd)
+
+	// Template command
+	templateCmd := &cobra.Command{
+		Use:   "template",
+		Short: "List and inspect built-in templates",
+	}
+	templateCmd.AddCommand(&cobra.Command{
+		Use:   "list",
+		Short: "List available built-in templates",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("Available templates:")
+			for _, name := range template.AvailableTemplates() {
+				desc := ""
+				switch name {
+				case "basic":
+					desc = "Simple select/url-test/fallback groups"
+				case "acl4ssr_full":
+					desc = "Full ACL4SSR rules (16 proxy groups, 16 rule sets)"
+				case "acl4ssr_lite":
+					desc = "Lite ACL4SSR rules (5 groups, 7 rule sets)"
+				case "loyalsoldier":
+					desc = "Loyalsoldier/clash-rules (6 groups, 8 rule sets)"
+				}
+				fmt.Printf("  %-20s %s\n", name, desc)
+			}
+			fmt.Println()
+			fmt.Println("Use `fetch_rules: true` in config to expand rule URLs inline.")
+			fmt.Println("Rule sources: jsDelivr CDN (auto-updates from GitHub upstream)")
+			return nil
+		},
+	})
+	rootCmd.AddCommand(templateCmd)
 
 	// Dry-run convert
 	dryRunCmd := &cobra.Command{
