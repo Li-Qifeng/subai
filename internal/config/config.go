@@ -23,6 +23,16 @@ type Source struct {
 	Cookie       string `yaml:"cookie,omitempty"`
 	UserAgent    string `yaml:"user-agent,omitempty"`
 	RefreshCron  string `yaml:"refresh-cron,omitempty"`  // Cron expression for auto-refresh
+	Login        *Login `yaml:"login,omitempty"`          // Automated login config
+}
+
+// Login defines the configuration for automated panel login.
+// Supported methods: "v2board"
+type Login struct {
+	Method   string `yaml:"method"`            // Login method: "v2board"
+	URL      string `yaml:"url"`               // Panel base URL, e.g. "https://www.xfltd.org"
+	Email    string `yaml:"email"`              // Login email
+	Password string `yaml:"password"`           // Login password
 }
 
 // Rules defines filtering rules for proxy selection.

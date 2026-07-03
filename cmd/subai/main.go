@@ -12,6 +12,7 @@ import (
 	"github.com/user/subai/internal/config"
 	"github.com/user/subai/internal/converter"
 	"github.com/user/subai/internal/fetcher"
+	"github.com/user/subai/internal/login"
 	"github.com/user/subai/internal/parser"
 	"github.com/user/subai/internal/rule"
 	"github.com/user/subai/internal/server"
@@ -83,6 +84,32 @@ Examples:
 	serveCmd.Flags().String("listen", ":8080", "Listen address")
 	serveCmd.Flags().String("token", "", "Auth token for API access")
 	rootCmd.AddCommand(serveCmd)
+
+	// Login command
+	loginCmd := &cobra.Command{
+		Use:   "login <name>",
+		Short: "Auto-login to panel and save subscribe URL",
+		Long: `Automatically log in to a proxy panel (V2Board) to obtain the
+subscription URL. Requires Python with cloudscraper installed.
+
+  pip3 install cloudscraper
+
+The login result is saved as a new source in the config file.
+
+Examples:
+  subai login my-airport --url https://www.xfltd.org \
+    --email user@example.com --password "xxx"
+  subai login my-airport -c subai.yaml \
+    --method v2board --url https://panel.com --email u@e.com --password "p"
+`,
+		Args: cobra.ExactArgs(1),
+		RunE: runLogin,
+	}
+	loginCmd.Flags().String("method", "v2board", "Login method (v2board)")
+	loginCmd.Flags().String("url", "", "Panel base URL (e.g. https://www.xfltd.org)")
+	loginCmd.Flags().String("email", "", "Login email")
+	loginCmd.Flags().String("password", "", "Login password")
+	rootCmd.AddCommand(loginCmd)
 
 	// Dry-run convert
 	dryRunCmd := &cobra.Command{
@@ -309,6 +336,97 @@ func runServe(cmd *cobra.Command, args []string) error {
 	return srv.Start()
 }
 
+func runLogin(cmd *cobra.Command, args []string) error {
+	name := args[0]
+	method, _ := cmd.Flags().GetString("method")
+	baseURL, _ := cmd.Flags().GetString("url")
+	email, _ := cmd.Flags().GetString("email")
+	password, _ := cmd.Flags().GetString("password")
+
+	if baseURL == "" {
+		return fmt.Errorf("--url is required (panel base URL)")
+	}
+	if email == "" {
+		return fmt.Errorf("--email is required")
+	}
+	if password == "" {
+		return fmt.Errorf("--password is required")
+	}
+
+	fmt.Fprintf(os.Stderr, "  🔐 Logging into %s as %s...\n", baseURL, email)
+
+	var result *login.Result
+	var err error
+	switch method {
+	case "v2board":
+		result, err = login.V2Board(baseURL, email, password)
+	default:
+		return fmt.Errorf("unsupported login method: %s (supported: v2board)", method)
+	}
+	if err != nil {
+		return fmt.Errorf("login failed: %w\n\n  Tip: Try running 'subai login' from a machine with a clean IP\n  Or manually add the subscribe URL: subai source add %s <url>", err, name)
+	}
+
+	fmt.Fprintf(os.Stderr, "  ✅ Login successful!\n")
+	fmt.Fprintf(os.Stderr, "  📧 Email: %s\n", result.User.Email)
+	if result.User.Plan != "" {
+		fmt.Fprintf(os.Stderr, "  📦 Plan: %s\n", result.User.Plan)
+	}
+	if result.User.TransferEnable > 0 {
+		used := result.User.Used
+		total := result.User.TransferEnable
+		pct := float64(used) / float64(total) * 100
+		fmt.Fprintf(os.Stderr, "  📊 Traffic: %.2f GB / %.2f GB (%.1f%%)\n",
+			float64(used)/1073741824, float64(total)/1073741824, pct)
+	}
+	fmt.Fprintf(os.Stderr, "  🔗 Subscribe URL: %s\n", result.SubscribeURL)
+
+	// Save to config
+	cfg, err := config.Load(cfgFile)
+	if err != nil {
+		cfg = config.DefaultConfig()
+	}
+
+	// Update or add source
+	found := false
+	for i := range cfg.Sources {
+		if cfg.Sources[i].Name == name {
+			cfg.Sources[i].URL = result.SubscribeURL
+			cfg.Sources[i].UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15"
+			cfg.Sources[i].Login = &config.Login{
+				Method:   method,
+				URL:      baseURL,
+				Email:    email,
+				Password: password,
+			}
+			found = true
+			fmt.Fprintf(os.Stderr, "  📝 Updated source %q in config\n", name)
+			break
+		}
+	}
+	if !found {
+		cfg.Sources = append(cfg.Sources, config.Source{
+			Name:      name,
+			URL:       result.SubscribeURL,
+			UserAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+			Login: &config.Login{
+				Method:   method,
+				URL:      baseURL,
+				Email:    email,
+				Password: password,
+			},
+		})
+		fmt.Fprintf(os.Stderr, "  📝 Added source %q to config\n", name)
+	}
+
+	if err := cfg.Save(cfgFile); err != nil {
+		return fmt.Errorf("save config: %w", err)
+	}
+
+	fmt.Fprintf(os.Stderr, "  ✅ Config saved to %s\n", cfgFile)
+	return nil
+}
+
 func newSourceCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "source",
@@ -335,6 +453,10 @@ func newSourceCmd() *cobra.Command {
 				}
 				if src.UserAgent != "" {
 					fmt.Printf("   UA: %s\n", src.UserAgent)
+				}
+				if src.Login != nil {
+					fmt.Printf("   Login: %s @ %s (method: %s)\n",
+						maskString(src.Login.Email, 16), src.Login.URL, src.Login.Method)
 				}
 				fmt.Println()
 			}
