@@ -3,6 +3,7 @@ package login
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -52,10 +53,11 @@ func V2Board(baseURL, email, password string) (*Result, error) {
 		return nil, fmt.Errorf("scripts/subai_login.py not found. Ensure it's in the scripts/ directory")
 	}
 
-	// Execute Python helper
+	// Execute Python helper (stdout only — stderr goes to terminal for debugging)
 	cmd := exec.Command("python3", scriptPath)
 	cmd.Stdin = strings.NewReader(string(inputJSON))
-	output, err := cmd.CombinedOutput()
+	cmd.Stderr = os.Stderr
+	output, err := cmd.Output()
 	if err != nil {
 		// Try to parse error from output
 		var errResult struct {

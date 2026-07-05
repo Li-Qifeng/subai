@@ -55,7 +55,7 @@ def try_cloudscraper(base_url, email, password):
 
 # ---- Strategy 2: Playwright ----
 def try_playwright(base_url, email, password):
-    """Use Playwright headless Chromium."""
+    """Use Playwright headless Chromium with page-level fetch."""
     from playwright.sync_api import sync_playwright
     url_clean = base_url.rstrip('/')
 
@@ -67,34 +67,42 @@ def try_playwright(base_url, email, password):
         context = browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            locale='zh-CN',
         )
         page = context.new_page()
-        page.goto(url_clean + "/", timeout=30000)
 
-        # Wait for challenge to resolve — watch for SPA navigation
-        for _ in range(35):
+        # Load homepage — triggers CF challenge if present
+        page.goto(url_clean + "/", timeout=30000, wait_until='domcontentloaded')
+
+        # Wait for challenge to resolve (max 40s)
+        for _ in range(40):
             try:
-                if 'login' in page.url.lower() or ('安全检查' not in page.title() and page.title() != ''):
+                title = page.title()
+                if title and '安全检查' not in title:
                     break
             except:
                 pass
             page.wait_for_timeout(1000)
 
         page.wait_for_load_state("networkidle", timeout=15000)
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(1500)
 
-        # Use APIRequestContext (preserves cookies, proper CORS)
-        api = context.request
-        login_resp = api.post(
-            url_clean + "/api/v1/passport/auth/login",
-            data=json.dumps({"email": email, "password": password}),
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-            }
-        )
-        login_data = login_resp.json()
+        # Login via page-context fetch (shares cookies, headers, CF state)
+        js = """
+        async (args) => {
+            const r = await fetch(args.url + '/api/v1/passport/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({email: args.email, password: args.password})
+            });
+            return await r.json();
+        }
+        """
+        login_data = page.evaluate(js, {"url": url_clean, "email": email, "password": password})
 
         if 'data' not in login_data or 'token' not in login_data['data']:
             raise Exception(f"login failed: {json.dumps(login_data)[:200]}")
@@ -102,13 +110,29 @@ def try_playwright(base_url, email, password):
         token = login_data['data']['token']
         auth_data = login_data['data']['auth_data']
 
-        info_resp = api.get(url_clean + "/api/v1/user/info",
-            headers={"Authorization": auth_data, "Accept": "application/json"})
-        user_data = info_resp.json().get('data', {}) if info_resp.ok else {}
+        # Fetch user info
+        info_js = """
+        async (args) => {
+            const r = await fetch(args.url + '/api/v1/user/info', {
+                headers: {'Authorization': args.auth, 'Accept': 'application/json'}
+            });
+            return r.ok ? (await r.json()).data || {} : {};
+        }
+        """
+        user_data = page.evaluate(info_js, {"url": url_clean, "auth": auth_data})
 
-        sub_resp = api.get(url_clean + "/api/v1/user/getSubscribe",
-            headers={"Authorization": auth_data, "Accept": "application/json"})
-        sub_data = sub_resp.json().get('data', {}) if sub_resp.ok else {}
+        # Fetch subscribe URL
+        sub_js = """
+        async (args) => {
+            const r = await fetch(args.url + '/api/v1/user/getSubscribe', {
+                headers: {'Authorization': args.auth, 'Accept': 'application/json'}
+            });
+            return r.ok ? (await r.json()).data || {} : {};
+        }
+        """
+        sub_data = page.evaluate(sub_js, {"url": url_clean, "auth": auth_data})
+
+        browser.close()
 
         subscribe_url = sub_data.get('subscribe_url', '') or user_data.get('subscribe_url', '')
         plan_name = ''
@@ -120,7 +144,6 @@ def try_playwright(base_url, email, password):
         used = (sub_data.get('u', 0) or 0) + (sub_data.get('d', 0) or 0)
         transfer = sub_data.get('transfer_enable', user_data.get('transfer_enable', 0))
 
-        browser.close()
         return {
             'subscribe_url': subscribe_url, 'token': token, 'auth_data': auth_data,
             'user': {
