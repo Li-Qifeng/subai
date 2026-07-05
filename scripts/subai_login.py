@@ -1,171 +1,156 @@
 #!/usr/bin/env python3
 """
-subai login helper — Cloudflare bypass + V2Board login via cloudscraper.
+subai login helper — V2Board login.
 
-Called as a subprocess by the `subai login` Go command.
-Communicates via JSON on stdin/stdout.
+Two strategies:
+1. cloudscraper (CF bypass, fast) — primary
+2. Playwright (headless Chromium) — last resort for complex challenges
 
-Input (JSON, one line):
-  {"method":"v2board","base_url":"https://www.xfltd.org","email":"...","password":"..."}
+NOTES:
+- Uses cloudscraper with requests timeout only (no signal.alarm — it interferes
+  with urllib3's SSL socket calls and causes hangs).
+- Playwright fallback for sites with JS challenges cloudscraper can't solve.
 
-Output (JSON, one line on success):
-  {"ok":true,"subscribe_url":"https://...","token":"...","auth_data":"...",
-   "user":{"email":"...","plan":"250G-不限时长","used":...,"total":...}}
-
-On error:
-  {"ok":false,"error":"message"}
+Input: JSON over stdin one line
+Output: JSON over stdout one line
 """
 
-import json, sys, base64, urllib.parse, re, traceback, time
+import json, sys
 
 
-def solve_geua_challenge(scraper, base_url):
-    """Solve the GE-UA JS challenge. Returns True if solved."""
-    for attempt in range(3):
-        try:
-            r = scraper.get(base_url + "/", timeout=60)
-            m = re.search(r'var nonce = (\d+)', r.text)
-            if not m:
-                if "安全检查" not in r.text and "ge_ua" not in r.text[:500].lower():
-                    return True  # No challenge
-                continue
-
-            nonce = int(m.group(1))
-            # requests cookie jar already URL-decodes values
-            ge_ua_p = scraper.cookies.get("ge_ua_p", "")
-            if not ge_ua_p:
-                time.sleep(1)
-                continue
-
-            # Compute sum (same JS algorithm)
-            total = sum(ord(ch) * (nonce + i) 
-                       for i, ch in enumerate(ge_ua_p) if ch.isalnum())
-
-            # POST solution
-            r2 = scraper.post(base_url + "/",
-                             data={"sum": total, "nonce": nonce},
-                             headers={"X-GE-UA-Step": "prev",
-                                      "Content-Type": "application/x-www-form-urlencoded"},
-                             timeout=30)
-
-            if "安全检查" not in r2.text and "ge_ua" not in r2.text[:500].lower():
-                return True  # Solved!
-
-            # Check if server returned ok:true
-            try:
-                resp = r2.json()
-                if resp.get("ok") is True:
-                    return True
-            except (json.JSONDecodeError, ValueError):
-                pass
-
-        except Exception:
-            time.sleep(2)
-
-    return False
-
-
-def do_v2board_login(base_url, email, password):
-    """Full V2Board login flow with CF bypass."""
+# ---- Strategy 1: cloudscraper ----
+def try_cloudscraper(base_url, email, password):
+    """Use cloudscraper to bypass Cloudflare and login."""
     import cloudscraper
-
     url_clean = base_url.rstrip('/')
 
-    # Try multiple strategies
-    strategies = [
-        url_clean,
-        url_clean.replace("://", "://www.") if "www." not in url_clean else None,
-        url_clean.replace("://www.", "://") if "www." in url_clean else None,
-    ]
-    strategies = [s for s in strategies if s]
-
-    last_error = None
-
-    for url_base in strategies:
-        for attempt in range(3):
-            scraper = cloudscraper.create_scraper(
-                browser={'browser': 'chrome', 'platform': 'linux', 'desktop': True},
-                interpreter='js2py'
-            )
-
-            try:
-                # Try to solve challenge
-                challenge_solved = solve_geua_challenge(scraper, url_base)
-
-                if not challenge_solved:
-                    # Try direct login anyway (cloudscraper handles some challenges internally)
-                    pass
-
-                # POST login
-                r_login = scraper.post(
-                    url_base + "/api/v1/passport/auth/login",
-                    json={"email": email, "password": password},
-                    timeout=30
-                )
-
-                if r_login.status_code == 200:
-                    try:
-                        data = r_login.json()
-                        if 'data' in data and 'token' in data['data']:
-                            return _handle_login_response(r_login, scraper, url_base)
-                    except (json.JSONDecodeError, ValueError, KeyError):
-                        pass
-
-                # If login returns challenge page, wait and retry
-                text_lower = r_login.text.lower() if r_login.text else ""
-                if "安全检查" in text_lower or "ge_ua" in text_lower:
-                    time.sleep(2)
-                    continue
-
-                last_error = f"login returned {r_login.status_code}: {r_login.text[:200]}"
-
-            except Exception as e:
-                last_error = str(e)
-                time.sleep(1)
-                continue
-
-    raise Exception(
-        f"failed to login after multiple attempts. Last error: {last_error}\n"
-        "Hints:\n"
-        "  - Try running from a different IP (e.g. your home network)\n"
-        "  - Or manually obtain the subscribe URL from the panel and add it to the config"
+    scraper = cloudscraper.create_scraper(
+        browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True, 'mobile': False},
+        delay=10,
     )
+    scraper.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    })
+
+    # Warm up — solve CF challenge (best-effort)
+    r = scraper.get(url_clean + "/", timeout=30)
+
+    # Login — if warmup didn't bypass, the session may still work
+    # (cloudscraper handles cookie/Sess challenges at transport level)
+
+    # Login
+    r = scraper.post(
+        url_clean + "/api/v1/passport/auth/login",
+        json={"email": email, "password": password},
+        headers={
+            "Accept": "application/json", "Content-Type": "application/json",
+            "Origin": url_clean, "Referer": url_clean + "/",
+            "X-Requested-With": "XMLHttpRequest",
+        },
+        timeout=15,
+    )
+    return _parse_login_response(r, url_clean, scraper)
 
 
-def _handle_login_response(r, scraper, base_url):
-    """Process login response and fetch subscribe URL + user info."""
+# ---- Strategy 2: Playwright ----
+def try_playwright(base_url, email, password):
+    """Use Playwright headless Chromium."""
+    from playwright.sync_api import sync_playwright
+    url_clean = base_url.rstrip('/')
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-setuid-sandbox'],
+        )
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        )
+        page = context.new_page()
+        page.goto(url_clean + "/", timeout=30000)
+
+        # Wait for challenge to resolve — watch for SPA navigation
+        for _ in range(35):
+            try:
+                if 'login' in page.url.lower() or ('安全检查' not in page.title() and page.title() != ''):
+                    break
+            except:
+                pass
+            page.wait_for_timeout(1000)
+
+        page.wait_for_load_state("networkidle", timeout=15000)
+        page.wait_for_timeout(1000)
+
+        # Use APIRequestContext (preserves cookies, proper CORS)
+        api = context.request
+        login_resp = api.post(
+            url_clean + "/api/v1/passport/auth/login",
+            data=json.dumps({"email": email, "password": password}),
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            }
+        )
+        login_data = login_resp.json()
+
+        if 'data' not in login_data or 'token' not in login_data['data']:
+            raise Exception(f"login failed: {json.dumps(login_data)[:200]}")
+
+        token = login_data['data']['token']
+        auth_data = login_data['data']['auth_data']
+
+        info_resp = api.get(url_clean + "/api/v1/user/info",
+            headers={"Authorization": auth_data, "Accept": "application/json"})
+        user_data = info_resp.json().get('data', {}) if info_resp.ok else {}
+
+        sub_resp = api.get(url_clean + "/api/v1/user/getSubscribe",
+            headers={"Authorization": auth_data, "Accept": "application/json"})
+        sub_data = sub_resp.json().get('data', {}) if sub_resp.ok else {}
+
+        subscribe_url = sub_data.get('subscribe_url', '') or user_data.get('subscribe_url', '')
+        plan_name = ''
+        if isinstance(sub_data.get('plan'), dict):
+            plan_name = sub_data['plan'].get('name', '')
+        elif isinstance(user_data.get('plan'), dict):
+            plan_name = user_data['plan'].get('name', '')
+
+        used = (sub_data.get('u', 0) or 0) + (sub_data.get('d', 0) or 0)
+        transfer = sub_data.get('transfer_enable', user_data.get('transfer_enable', 0))
+
+        browser.close()
+        return {
+            'subscribe_url': subscribe_url, 'token': token, 'auth_data': auth_data,
+            'user': {
+                'email': user_data.get('email', sub_data.get('email', '')),
+                'plan': plan_name, 'transfer_enable': transfer, 'used': used,
+                'expired_at': user_data.get('expired_at'), 'balance': user_data.get('balance', 0),
+            }
+        }
+
+
+def _parse_login_response(r, url_clean, session):
+    """Parse login response and fetch user info + subscribe URL."""
+    if r.status_code != 200 or not r.text:
+        raise Exception(f"login returned {r.status_code}: empty body")
     data = r.json()
+    if 'data' not in data or 'token' not in data['data']:
+        raise Exception(f"unexpected login response: {r.text[:200]}")
+
     token = data['data']['token']
     auth_data = data['data']['auth_data']
 
-    # Fetch user info
-    r_info = scraper.get(
-        base_url + "/api/v1/user/info",
-        headers={"Authorization": auth_data, "Accept": "application/json"},
-        timeout=30
-    )
+    r_info = session.get(url_clean + "/api/v1/user/info",
+        headers={"Authorization": auth_data, "Accept": "application/json"}, timeout=10)
     user_data = r_info.json().get('data', {}) if r_info.status_code == 200 else {}
 
-    # Fetch subscribe info
-    r_sub = scraper.get(
-        base_url + "/api/v1/user/getSubscribe",
-        headers={"Authorization": auth_data, "Accept": "application/json"},
-        timeout=30
-    )
+    r_sub = session.get(url_clean + "/api/v1/user/getSubscribe",
+        headers={"Authorization": auth_data, "Accept": "application/json"}, timeout=10)
+    sub_data = r_sub.json().get('data', {}) if r_sub.status_code == 200 else {}
 
-    subscribe_url = ""
-    sub_data = {}
-    if r_sub.status_code == 200:
-        try:
-            sub_data = r_sub.json().get('data', {})
-            subscribe_url = sub_data.get('subscribe_url', '')
-        except (json.JSONDecodeError, ValueError):
-            pass
-
-    if not subscribe_url:
-        subscribe_url = user_data.get('subscribe_url', '')
-
-    # Merge data
+    subscribe_url = sub_data.get('subscribe_url', '') or user_data.get('subscribe_url', '')
     plan_name = ''
     if isinstance(sub_data.get('plan'), dict):
         plan_name = sub_data['plan'].get('name', '')
@@ -174,51 +159,56 @@ def _handle_login_response(r, scraper, base_url):
 
     used = (sub_data.get('u', 0) or 0) + (sub_data.get('d', 0) or 0)
     transfer = sub_data.get('transfer_enable', user_data.get('transfer_enable', 0))
-    uuid_val = sub_data.get('uuid', user_data.get('uuid', ''))
 
     return {
-        'subscribe_url': subscribe_url,
-        'token': token,
-        'auth_data': auth_data,
+        'subscribe_url': subscribe_url, 'token': token, 'auth_data': auth_data,
         'user': {
             'email': user_data.get('email', sub_data.get('email', '')),
-            'plan': plan_name,
-            'transfer_enable': transfer,
-            'used': used,
-            'expired_at': user_data.get('expired_at'),
-            'balance': user_data.get('balance', 0),
-            'uuid': uuid_val,
+            'plan': plan_name, 'transfer_enable': transfer, 'used': used,
+            'expired_at': user_data.get('expired_at'), 'balance': user_data.get('balance', 0),
         }
     }
 
 
 def main():
-    """Read JSON input from stdin, perform login, write JSON result to stdout."""
     try:
         line = sys.stdin.readline()
         if not line:
             raise Exception("no input received")
-
         params = json.loads(line)
         method = params.get('method', 'v2board')
-
-        if method == 'v2board':
-            result = do_v2board_login(
-                params['base_url'],
-                params['email'],
-                params['password']
-            )
-        else:
+        if method != 'v2board':
             raise Exception(f"unsupported login method: {method}")
 
-        result['ok'] = True
-        print(json.dumps(result, ensure_ascii=False, default=str))
-        sys.stdout.flush()
+        base_url = params['base_url']
+        email = params['email']
+        password = params['password']
+
+        strategies = [
+            ("Playwright", try_playwright),
+            ("cloudscraper", try_cloudscraper),
+        ]
+
+        last_error = None
+        for name, strategy in strategies:
+            try:
+                result = strategy(base_url, email, password)
+                result['ok'] = True
+                print(json.dumps(result, ensure_ascii=False, default=str))
+                sys.stdout.flush()
+                return
+            except ImportError:
+                sys.stderr.write(f"  ⚠️  {name} not available, skipping...\n")
+                continue
+            except Exception as e:
+                sys.stderr.write(f"  ⚠️  {name} failed ({e}), trying next...\n")
+                last_error = str(e)
+                continue
+
+        raise Exception(f"all login strategies failed. Last error: {last_error}")
 
     except Exception as e:
-        error_result = {'ok': False, 'error': str(e)}
-        print(json.dumps(error_result, ensure_ascii=False))
-        sys.stdout.flush()
+        print(json.dumps({'ok': False, 'error': str(e)}, ensure_ascii=False), flush=True)
         sys.exit(1)
 
 
