@@ -15,7 +15,19 @@ Input: JSON over stdin one line
 Output: JSON over stdout one line
 """
 
-import json, sys
+import json, sys, time
+
+
+def _retry(fn, *args, max_attempts=3, delay=2):
+    """Retry a strategy up to max_attempts times with delay between attempts."""
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return fn(*args)
+        except Exception as e:
+            if attempt == max_attempts:
+                raise
+            sys.stderr.write(f"  ⚠️  attempt {attempt}/{max_attempts} failed, retrying in {delay}s...\n")
+            time.sleep(delay)
 
 
 # ---- Strategy 1: cloudscraper ----
@@ -215,7 +227,7 @@ def main():
         last_error = None
         for name, strategy in strategies:
             try:
-                result = strategy(base_url, email, password)
+                result = _retry(strategy, base_url, email, password)
                 result['ok'] = True
                 print(json.dumps(result, ensure_ascii=False, default=str))
                 sys.stdout.flush()
