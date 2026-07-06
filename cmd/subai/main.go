@@ -15,6 +15,7 @@ import (
 	"github.com/user/subai/internal/login"
 	"github.com/user/subai/internal/parser"
 	"github.com/user/subai/internal/rule"
+	"github.com/user/subai/internal/rulerepo"
 	"github.com/user/subai/internal/server"
 	"github.com/user/subai/internal/template"
 )
@@ -204,6 +205,9 @@ A custom URL can be provided as an argument.`,
 		},
 	})
 	rootCmd.AddCommand(templateCmd)
+
+	// Rule management commands
+	rootCmd.AddCommand(newRuleCmd())
 
 	// Dry-run convert
 	dryRunCmd := &cobra.Command{
@@ -639,6 +643,235 @@ func isProxyURI(s string) bool {
 		}
 	}
 	return false
+}
+
+// newRuleCmd creates the "subai rule" command tree for rule management.
+func newRuleCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rule",
+		Short: "Manage rule sets from built-in rule repositories",
+		Long: `Manage rule sets from built-in rule repositories.
+
+Available rule sources:
+  blackmatrix7  — blackmatrix7/ios_rule_script (600+ rules, most comprehensive)
+  acl4ssr       — ACL4SSR/ACL4SSR (29 rule files, classic)
+  loyalsoldier  — Loyalsoldier/clash-rules (14 rule files, Clash Premium optimized)
+
+Use 'subai rule list' to see all available rules.
+Use 'subai rule add <id> --group <group>' to add a rule to your config.`,
+	}
+
+	// List command
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all available rule sets from built-in repositories",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			repo, _ := cmd.Flags().GetString("repo")
+			category, _ := cmd.Flags().GetString("category")
+			behavior, _ := cmd.Flags().GetString("behavior")
+
+			opts := rulerepo.SearchOptions{
+				Repo:     repo,
+				Category: category,
+				Behavior: behavior,
+			}
+
+			results := rulerepo.SearchRules(opts)
+			if len(results) == 0 {
+				fmt.Println("No rules found matching the filters.")
+				return nil
+			}
+
+			// Group by repo + category
+			type groupKey struct{ repo, cat string }
+			groups := make(map[groupKey][]rulerepo.RuleMeta)
+			var keys []groupKey
+			for _, r := range results {
+				k := groupKey{repo: string(r.Rule.Repo), cat: r.Rule.Category}
+				if _, ok := groups[k]; !ok {
+					keys = append(keys, k)
+				}
+				groups[k] = append(groups[k], r.Rule)
+			}
+
+			for _, k := range keys {
+				cat := k.cat
+				if cat == "" {
+					cat = "Other"
+				}
+				fmt.Printf("\n  \033[1m%s\033[0m  [\033[36m%s\033[0m]\n", k.repo, cat)
+				for _, r := range groups[k] {
+					fmt.Printf("    \033[33m%-36s\033[0m %s\n", r.ID, r.Description)
+				}
+			}
+			fmt.Printf("\n  Total: %d rules\n", len(results))
+			return nil
+		},
+	}
+	listCmd.Flags().String("repo", "", "Filter by repo (blackmatrix7, acl4ssr, loyalsoldier)")
+	listCmd.Flags().String("category", "", "Filter by category (AI, Streaming, Ads, Proxy, Direct, ...)")
+	listCmd.Flags().String("behavior", "", "Filter by behavior (domain, ipcidr, classical)")
+	cmd.AddCommand(listCmd)
+
+	// Search command
+	searchCmd := &cobra.Command{
+		Use:   "search <keyword>",
+		Short: "Search rule sets by keyword",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			results := rulerepo.SearchRules(rulerepo.SearchOptions{Keyword: args[0]})
+			if len(results) == 0 {
+				fmt.Printf("No rules found matching %q\n", args[0])
+				return nil
+			}
+			fmt.Printf("  Found %d rules matching %q:\n\n", len(results), args[0])
+			for _, r := range results {
+				hl := ""
+				if r.Highlight != "" {
+					hl = " \033[90m(" + r.Highlight + ")\033[0m"
+				}
+				cat := r.Rule.Category
+				if cat == "" {
+					cat = "Other"
+				}
+				fmt.Printf("  \033[33m%-36s\033[0m [\033[36m%s\033[0m] [\033[35m%s\033[0m] %s%s\n",
+					r.Rule.ID, cat, r.Rule.Behavior, r.Rule.Description, hl)
+			}
+			return nil
+		},
+	}
+	cmd.AddCommand(searchCmd)
+
+	// Add command
+	addCmd := &cobra.Command{
+		Use:   "add <id>",
+		Short: "Add a rule set to the config",
+		Long: `Add a rule set from a built-in repository to the config file.
+
+The <id> is the rule identifier, e.g. "blackmatrix7/OpenAI" or "loyalsoldier/proxy".
+Use --group to specify the target proxy group (default: "🚀 节点选择").
+Use --provider-name to override the auto-generated rule-provider name.
+
+Examples:
+  subai rule add blackmatrix7/OpenAI --group "🤖 AI"
+  subai rule add loyalsoldier/proxy --group "🚀 节点选择"
+  subai rule add acl4ssr/BanAD --group "🚫 广告拦截"`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id := args[0]
+			group, _ := cmd.Flags().GetString("group")
+			providerName, _ := cmd.Flags().GetString("provider-name")
+
+			// Resolve the rule
+			rule := rulerepo.FindRule(id)
+			if rule == nil {
+				// Try as repo:name format
+				url, err := rulerepo.ResolveRepoURL(id)
+				if err != nil {
+					return fmt.Errorf("unknown rule %q; use 'subai rule search' to find rules", id)
+				}
+				// Create a minimal rule meta for the found URL
+				rule = &rulerepo.RuleMeta{ID: id, Name: id, URL: url, Behavior: rulerepo.InferBehavior(url)}
+			}
+
+			// Load config
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			// Check for duplicates
+			for _, rs := range cfg.Output.Template.RuleSets {
+				if rs.URL == rule.URL {
+					return fmt.Errorf("rule %q already exists in config (URL: %s)", id, rule.URL)
+				}
+			}
+
+			// Build the rule set entry
+			rs := template.RuleSet{
+				URL:          rule.URL,
+				Group:        group,
+				ProviderName: providerName,
+			}
+			cfg.Output.Template.RuleSets = append(cfg.Output.Template.RuleSets, rs)
+
+			// Save
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+
+			fmt.Printf("  ✅ Added rule \033[33m%s\033[0m → group \033[36m%s\033[0m\n", id, group)
+			fmt.Printf("     URL: %s\n", rule.URL)
+			fmt.Printf("     Behavior: %s\n", rule.Behavior)
+			return nil
+		},
+	}
+	addCmd.Flags().String("group", "🚀 节点选择", "Target proxy group name")
+	addCmd.Flags().String("provider-name", "", "Override rule-provider name (auto-generated from URL if empty)")
+	cmd.AddCommand(addCmd)
+
+	// Remove command
+	removeCmd := &cobra.Command{
+		Use:   "remove <id>",
+		Short: "Remove a rule set from the config",
+		Long: `Remove a rule set from the config file by its ID or URL.
+
+The <id> can be a rule identifier (e.g. "blackmatrix7/OpenAI") or
+a substring of the rule URL. Use 'subai rule list' to see configured rules.
+
+Examples:
+  subai rule remove blackmatrix7/OpenAI
+  subai rule remove OpenAI        (matches by name/substring)
+  subai rule remove "BanAD"       (matches by URL substring)`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := strings.ToLower(args[0])
+
+			// Load config
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			// Find matching rules
+			var matched []int
+			for i, rs := range cfg.Output.Template.RuleSets {
+				lowerURL := strings.ToLower(rs.URL)
+				lowerName := strings.ToLower(rs.ProviderName)
+				if strings.Contains(lowerURL, query) || strings.Contains(lowerName, query) {
+					matched = append(matched, i)
+				}
+			}
+
+			if len(matched) == 0 {
+				return fmt.Errorf("no rule sets matching %q found in config", args[0])
+			}
+
+			// Remove in reverse order
+			removed := make([]string, 0, len(matched))
+			for i := len(matched) - 1; i >= 0; i-- {
+				idx := matched[i]
+				removed = append(removed, cfg.Output.Template.RuleSets[idx].URL)
+				cfg.Output.Template.RuleSets = append(
+					cfg.Output.Template.RuleSets[:idx],
+					cfg.Output.Template.RuleSets[idx+1:]...,
+				)
+			}
+
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+
+			fmt.Printf("  ✅ Removed %d rule(s):\n", len(removed))
+			for _, u := range removed {
+				fmt.Printf("     - %s\n", u)
+			}
+			return nil
+		},
+	}
+	cmd.AddCommand(removeCmd)
+
+	return cmd
 }
 
 func main() {
