@@ -101,6 +101,10 @@ func (s *Server) handleSub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Resolve profile from ?profile= query param
+	profileName := r.URL.Query().Get("profile")
+	cfg = cfg.Resolve(profileName)
+
 	// 2. Fetch and parse each source
 	var allProxies parser.ProxyList
 	for _, src := range cfg.Sources {

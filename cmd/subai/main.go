@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -62,6 +63,7 @@ Examples:
 	}
 	convertCmd.Flags().StringVarP(&target, "target", "t", "clash", "Output format (clash, base64, mixed)")
 	convertCmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output file (default: stdout)")
+	convertCmd.Flags().String("profile", "", "Use named profile (overrides current_profile)")
 	rootCmd.AddCommand(convertCmd)
 
 	// Validate command
@@ -71,6 +73,7 @@ Examples:
 		Long:  `Check the config file for errors and validate all rule patterns.`,
 		RunE:  runValidate,
 	}
+	validateCmd.Flags().String("profile", "", "Use named profile (overrides current_profile)")
 	rootCmd.AddCommand(validateCmd)
 
 	// Source management commands
@@ -209,6 +212,9 @@ A custom URL can be provided as an argument.`,
 	// Rule management commands
 	rootCmd.AddCommand(newRuleCmd())
 
+	// Profile management commands
+	rootCmd.AddCommand(newProfileCmd())
+
 	// Dry-run convert
 	dryRunCmd := &cobra.Command{
 		Use:   "dry-run",
@@ -268,6 +274,10 @@ func runConvert(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("load config %s: %w", cfgFile, err)
 		}
+
+		// Resolve profile
+		profileName, _ := cmd.Flags().GetString("profile")
+		cfg = cfg.Resolve(profileName)
 
 		for _, src := range cfg.Sources {
 			body, err := fetcher.Fetch(src.URL, src.Cookie, src.UserAgent)
@@ -346,6 +356,9 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("config error: %w", err)
 	}
+
+	profileName, _ := cmd.Flags().GetString("profile")
+	cfg = cfg.Resolve(profileName)
 
 	errs := cfg.Validate()
 	if len(errs) > 0 {
@@ -872,6 +885,200 @@ Examples:
 	cmd.AddCommand(removeCmd)
 
 	return cmd
+}
+
+// newProfileCmd creates the "subai profile" command tree for profile management.
+func newProfileCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "profile",
+		Short: "Manage configuration profiles",
+		Long: `Manage named configuration profiles for different use cases.
+
+Profiles override top-level config fields (sources, rules, output).
+Use 'subai profile switch <name>' to activate a profile.
+Use 'subai convert --profile <name>' for one-off use.
+
+Examples:
+  subai profile create mobile --template basic
+  subai profile create home --template acl4ssr_full
+  subai profile switch mobile
+  subai convert --profile mobile`,
+	}
+
+	// List command
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List configured profiles",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			if len(cfg.Profiles) == 0 {
+				fmt.Println("No profiles configured.")
+				return nil
+			}
+
+			current := cfg.CurrentProfile
+			keys := make([]string, 0, len(cfg.Profiles))
+			for k := range cfg.Profiles {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+
+			fmt.Printf("  Current profile: \033[33m%s\033[0m\n\n", orDefault(current, "(none)"))
+			for _, name := range keys {
+				p := cfg.Profiles[name]
+				mark := " "
+				if name == current {
+					mark = "\033[32m*\033[0m"
+				}
+				srcCount := len(p.Sources)
+				outTarget := ""
+				if p.Output != nil {
+					outTarget = p.Output.Target
+				}
+				fmt.Printf("  %s \033[1m%s\033[0m  [%d source(s), target=%s]\n",
+					mark, name, srcCount, orDefault(outTarget, "inherit"))
+			}
+			return nil
+		},
+	}
+	cmd.AddCommand(listCmd)
+
+	// Create command
+	createCmd := &cobra.Command{
+		Use:   "create <name>",
+		Short: "Create a new profile",
+		Long: `Create a new profile with optional overrides for sources, rules, and output.
+
+If no --template is specified, the profile inherits the root output template.
+If no --source is specified, the profile inherits root sources.
+
+Examples:
+  subai profile create mobile --template basic
+  subai profile create work --template acl4ssr_full --source myvps`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			tmpl, _ := cmd.Flags().GetString("template")
+			fetchRules, _ := cmd.Flags().GetBool("fetch-rules")
+			ruleProviders, _ := cmd.Flags().GetBool("rule-providers")
+
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				cfg = config.DefaultConfig()
+			}
+
+			// Check for duplicates
+			if cfg.Profiles == nil {
+				cfg.Profiles = make(map[string]config.Profile)
+			}
+			if _, exists := cfg.Profiles[name]; exists {
+				return fmt.Errorf("profile %q already exists", name)
+			}
+
+			p := config.Profile{}
+			if tmpl != "" || fetchRules || ruleProviders {
+				p.Output = &config.Output{
+					Target: cfg.Output.Target,
+				}
+				if tmpl != "" {
+					p.Output.Template.Template = tmpl
+				}
+				p.Output.Template.FetchRules = fetchRules
+				p.Output.Template.RuleProviders = ruleProviders
+			}
+
+			cfg.Profiles[name] = p
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+			fmt.Printf("  ✅ Created profile \033[33m%s\033[0m\n", name)
+			return nil
+		},
+	}
+	createCmd.Flags().String("template", "", "Template name for this profile")
+	createCmd.Flags().Bool("fetch-rules", false, "Enable fetch_rules in profile")
+	createCmd.Flags().Bool("rule-providers", false, "Enable rule-providers in profile")
+	cmd.AddCommand(createCmd)
+
+	// Switch command
+	switchCmd := &cobra.Command{
+		Use:   "switch <name>",
+		Short: "Switch the active profile",
+		Long: `Set the active profile. Subsequent convert/serve commands will use this profile.
+Use 'subai profile switch ""' to deactivate profiles and use root config.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			if name != "" {
+				if _, exists := cfg.Profiles[name]; !exists {
+					return fmt.Errorf("profile %q not found; use 'subai profile list' to see available profiles", name)
+				}
+			}
+
+			cfg.CurrentProfile = name
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+
+			if name == "" {
+				fmt.Println("  ✅ Profiles deactivated (using root config)")
+			} else {
+				fmt.Printf("  ✅ Switched to profile \033[33m%s\033[0m\n", name)
+			}
+			return nil
+		},
+	}
+	cmd.AddCommand(switchCmd)
+
+	// Delete command
+	deleteCmd := &cobra.Command{
+		Use:   "delete <name>",
+		Short: "Delete a profile",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			if _, exists := cfg.Profiles[name]; !exists {
+				return fmt.Errorf("profile %q not found", name)
+			}
+
+			delete(cfg.Profiles, name)
+			if cfg.CurrentProfile == name {
+				cfg.CurrentProfile = ""
+			}
+
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+			fmt.Printf("  ✅ Deleted profile \033[33m%s\033[0m\n", name)
+			return nil
+		},
+	}
+	cmd.AddCommand(deleteCmd)
+
+	return cmd
+}
+
+func orDefault(s, def string) string {
+	if s == "" {
+		return def
+	}
+	return s
 }
 
 func main() {

@@ -251,6 +251,208 @@ func TestSourceOmitEmpty(t *testing.T) {
 	}
 }
 
+// --- Profile tests ---
+
+func TestProfile_SaveAndLoad(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "profile.yaml")
+
+	cfg := &Config{
+		Sources: []Source{
+			{Name: "default-source", URL: "https://default.example.com/sub"},
+		},
+		Output: Output{Target: "clash", Pretty: true},
+		CurrentProfile: "mobile",
+		Profiles: map[string]Profile{
+			"mobile": {
+				Sources: []Source{
+					{Name: "mobile-source", URL: "https://mobile.example.com/sub"},
+				},
+				Output: &Output{Target: "clash", Pretty: false},
+			},
+			"home": {
+				Output: &Output{Target: "base64"},
+			},
+		},
+	}
+
+	if err := cfg.Save(path); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	loaded, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	if loaded.CurrentProfile != "mobile" {
+		t.Errorf("expected current_profile=mobile, got %q", loaded.CurrentProfile)
+	}
+	if len(loaded.Profiles) != 2 {
+		t.Fatalf("expected 2 profiles, got %d", len(loaded.Profiles))
+	}
+	if _, ok := loaded.Profiles["mobile"]; !ok {
+		t.Error("expected 'mobile' profile")
+	}
+	if _, ok := loaded.Profiles["home"]; !ok {
+		t.Error("expected 'home' profile")
+	}
+}
+
+func TestResolve_NoProfile(t *testing.T) {
+	cfg := &Config{
+		Sources: []Source{{Name: "s1", URL: "https://example.com/sub"}},
+		Output:  Output{Target: "clash"},
+	}
+
+	resolved := cfg.Resolve("")
+	if resolved != cfg {
+		t.Error("Resolve('') should return the same config when no profile is set")
+	}
+	if len(resolved.Sources) != 1 {
+		t.Errorf("expected 1 source, got %d", len(resolved.Sources))
+	}
+}
+
+func TestResolve_WithProfile(t *testing.T) {
+	cfg := &Config{
+		Sources: []Source{{Name: "default", URL: "https://default.example.com/sub"}},
+		Output:  Output{Target: "clash", Pretty: true},
+		Profiles: map[string]Profile{
+			"mobile": {
+				Sources: []Source{{Name: "mobile", URL: "https://mobile.example.com/sub"}},
+				Output:  &Output{Target: "clash", Pretty: false},
+			},
+		},
+	}
+
+	resolved := cfg.Resolve("mobile")
+	if resolved == cfg {
+		t.Fatal("Resolve should return a new config, not the original")
+	}
+
+	// Sources should be overridden
+	if len(resolved.Sources) != 1 || resolved.Sources[0].Name != "mobile" {
+		t.Errorf("expected mobile source, got %+v", resolved.Sources)
+	}
+
+	// Output should be overridden
+	if resolved.Output.Pretty != false {
+		t.Error("expected pretty=false from profile")
+	}
+}
+
+func TestResolve_Profile_PartialOverride(t *testing.T) {
+	// Profile only overrides output, sources remain from root
+	cfg := &Config{
+		Sources: []Source{{Name: "default", URL: "https://default.example.com/sub"}},
+		Rules:   Rules{Include: []string{"HK"}},
+		Output:  Output{Target: "clash", Pretty: true},
+		Profiles: map[string]Profile{
+			"no-sources": {
+				Output: &Output{Target: "base64", Pretty: false},
+			},
+		},
+	}
+
+	resolved := cfg.Resolve("no-sources")
+
+	// Sources should remain from root
+	if len(resolved.Sources) != 1 || resolved.Sources[0].Name != "default" {
+		t.Errorf("expected sources from root, got %+v", resolved.Sources)
+	}
+
+	// Rules should remain from root (profile didn't set Rules)
+	if len(resolved.Rules.Include) != 1 || resolved.Rules.Include[0] != "HK" {
+		t.Errorf("expected rules from root, got %+v", resolved.Rules)
+	}
+
+	// Output should be from profile
+	if resolved.Output.Target != "base64" {
+		t.Errorf("expected target=base64 from profile, got %q", resolved.Output.Target)
+	}
+}
+
+func TestResolve_UnknownProfile(t *testing.T) {
+	cfg := &Config{
+		Sources: []Source{{Name: "s1", URL: "https://example.com/sub"}},
+		Output:  Output{Target: "clash"},
+		Profiles: map[string]Profile{
+			"known": {},
+		},
+	}
+
+	resolved := cfg.Resolve("unknown")
+	if resolved != cfg {
+		t.Error("Resolve with unknown profile should return the original config")
+	}
+}
+
+func TestResolve_ProfileWithRules(t *testing.T) {
+	cfg := &Config{
+		Sources: []Source{{Name: "s1", URL: "https://example.com/sub"}},
+		Rules:   Rules{Include: []string{"HK"}},
+		Output:  Output{Target: "clash"},
+		Profiles: map[string]Profile{
+			"strict": {
+				Rules: &Rules{Include: []string{"🇭🇰"}, Exclude: []string{"过期"}},
+			},
+		},
+	}
+
+	resolved := cfg.Resolve("strict")
+	if len(resolved.Rules.Include) != 1 || resolved.Rules.Include[0] != "🇭🇰" {
+		t.Errorf("expected rules from profile, got %+v", resolved.Rules)
+	}
+}
+
+func TestCurrentProfile_UsedByDefault(t *testing.T) {
+	cfg := &Config{
+		Sources: []Source{{Name: "default", URL: "https://default.example.com/sub"}},
+		Output:  Output{Target: "clash"},
+		CurrentProfile: "mobile",
+		Profiles: map[string]Profile{
+			"mobile": {
+				Sources: []Source{{Name: "mobile-src", URL: "https://mobile.example.com/sub"}},
+			},
+		},
+	}
+
+	resolved := cfg.Resolve("") // empty → uses CurrentProfile
+	if len(resolved.Sources) != 1 || resolved.Sources[0].Name != "mobile-src" {
+		t.Errorf("expected mobile sources from CurrentProfile, got %+v", resolved.Sources)
+	}
+}
+
+func TestValidate_ProfileErrors(t *testing.T) {
+	cfg := &Config{
+		Output: Output{Target: "clash"},
+		Profiles: map[string]Profile{
+			"bad": {
+				Sources: []Source{
+					{Name: "", URL: ""}, // missing both name and url
+				},
+			},
+		},
+	}
+
+	errs := cfg.Validate()
+	// Should have 2 profile source errors (name + url)
+	if len(errs) < 2 {
+		t.Fatalf("expected at least 2 errors, got %d: %v", len(errs), errs)
+	}
+	hasProfileErr := false
+	for _, e := range errs {
+		if contains(e.Error(), "profile[bad]") {
+			hasProfileErr = true
+			break
+		}
+	}
+	if !hasProfileErr {
+		t.Errorf("expected profile validation error, got: %v", errs)
+	}
+}
+
 func contains(s, substr string) bool {
 	for i := 0; i <= len(s)-len(substr); i++ {
 		if s[i:i+len(substr)] == substr {

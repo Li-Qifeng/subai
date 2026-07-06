@@ -10,10 +10,21 @@ import (
 
 // Config is the top-level configuration for subai.
 type Config struct {
-	Sources []Source `yaml:"sources"`
-	Rules   Rules    `yaml:"rules"`
-	Output  Output   `yaml:"output"`
-	Server  Server   `yaml:"server,omitempty"`
+	Sources        []Source          `yaml:"sources"`
+	Rules          Rules             `yaml:"rules"`
+	Output         Output            `yaml:"output"`
+	Server         Server            `yaml:"server,omitempty"`
+	CurrentProfile string            `yaml:"current_profile,omitempty"` // active profile name
+	Profiles       map[string]Profile `yaml:"profiles,omitempty"`       // named profiles
+}
+
+// Profile defines a named configuration profile that overrides the base config.
+// Fields set in a profile replace the corresponding root-level fields
+// when the profile is active. Unset fields fall through to the root config.
+type Profile struct {
+	Sources []Source `yaml:"sources,omitempty"`
+	Rules   *Rules   `yaml:"rules,omitempty"`  // pointer: nil = not set, non-nil = override
+	Output  *Output  `yaml:"output,omitempty"` // pointer: nil = not set, non-nil = override
 }
 
 // Source defines a subscription source.
@@ -92,7 +103,47 @@ func (c *Config) Validate() []error {
 	if c.Output.Target == "" {
 		errs = append(errs, fmt.Errorf("output.target is required (clash, base64, singbox, mixed)"))
 	}
+	// Validate profiles
+	for name, p := range c.Profiles {
+		for i, s := range p.Sources {
+			if s.Name == "" {
+				errs = append(errs, fmt.Errorf("profile[%s].sources[%d]: name is required", name, i))
+			}
+			if s.URL == "" {
+				errs = append(errs, fmt.Errorf("profile[%s].sources[%d]: url is required", name, i))
+			}
+		}
+	}
 	return errs
+}
+
+// Resolve returns the effective config for the given profile name.
+// If profileName is empty, uses CurrentProfile. Falls back to root config
+// when the profile is not found or has no profile system.
+func (c *Config) Resolve(profileName string) *Config {
+	if profileName == "" {
+		profileName = c.CurrentProfile
+	}
+	if profileName == "" || c.Profiles == nil {
+		return c // no profile active
+	}
+	p, ok := c.Profiles[profileName]
+	if !ok {
+		return c // unknown profile, return root
+	}
+
+	// Shallow copy, then override
+	resolved := *c
+	if len(p.Sources) > 0 {
+		resolved.Sources = p.Sources
+	}
+	if p.Rules != nil {
+		resolved.Rules = *p.Rules
+	}
+	if p.Output != nil {
+		resolved.Output = *p.Output
+	}
+	return &resolved
 }
 
 // DefaultConfig returns a sensible default configuration.
