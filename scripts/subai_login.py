@@ -67,7 +67,7 @@ def try_cloudscraper(base_url, email, password):
 
 # ---- Strategy 2: Playwright ----
 def try_playwright(base_url, email, password):
-    """Use Playwright headless Chromium with page-level fetch."""
+    """Use Playwright to solve CF challenge, then Python requests for API calls."""
     from playwright.sync_api import sync_playwright
     url_clean = base_url.rstrip('/')
 
@@ -79,15 +79,12 @@ def try_playwright(base_url, email, password):
         context = browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-            locale='zh-CN',
         )
         page = context.new_page()
+        page.goto(url_clean + "/", timeout=30000)
 
-        # Load homepage — triggers CF challenge if present
-        page.goto(url_clean + "/", timeout=30000, wait_until='domcontentloaded')
-
-        # Wait for challenge to resolve (max 40s)
-        for _ in range(40):
+        # Wait for CF challenge to resolve (max 15s — challenge has 5s countdown)
+        for _ in range(15):
             try:
                 title = page.title()
                 if title and '安全检查' not in title:
@@ -96,74 +93,68 @@ def try_playwright(base_url, email, password):
                 pass
             page.wait_for_timeout(1000)
 
-        page.wait_for_load_state("networkidle", timeout=15000)
-        page.wait_for_timeout(1500)
+        page.wait_for_load_state("networkidle", timeout=10000)
+        page.wait_for_timeout(1000)
 
-        # Login via page-context fetch (shares cookies, headers, CF state)
-        js = """
-        async (args) => {
-            const r = await fetch(args.url + '/api/v1/passport/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify({email: args.email, password: args.password})
-            });
-            return await r.json();
-        }
-        """
-        login_data = page.evaluate(js, {"url": url_clean, "email": email, "password": password})
+        # Extract cookies from browser context and build a requests Session
+        import requests as py_requests
+        session = py_requests.Session()
+        for cookie in context.cookies():
+            session.cookies.set(cookie['name'], cookie['value'],
+                                domain=cookie['domain'], path=cookie['path'])
 
-        if 'data' not in login_data or 'token' not in login_data['data']:
-            raise Exception(f"login failed: {json.dumps(login_data)[:200]}")
-
-        token = login_data['data']['token']
-        auth_data = login_data['data']['auth_data']
-
-        # Fetch user info
-        info_js = """
-        async (args) => {
-            const r = await fetch(args.url + '/api/v1/user/info', {
-                headers: {'Authorization': args.auth, 'Accept': 'application/json'}
-            });
-            return r.ok ? (await r.json()).data || {} : {};
-        }
-        """
-        user_data = page.evaluate(info_js, {"url": url_clean, "auth": auth_data})
-
-        # Fetch subscribe URL
-        sub_js = """
-        async (args) => {
-            const r = await fetch(args.url + '/api/v1/user/getSubscribe', {
-                headers: {'Authorization': args.auth, 'Accept': 'application/json'}
-            });
-            return r.ok ? (await r.json()).data || {} : {};
-        }
-        """
-        sub_data = page.evaluate(sub_js, {"url": url_clean, "auth": auth_data})
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        })
 
         browser.close()
 
-        subscribe_url = sub_data.get('subscribe_url', '') or user_data.get('subscribe_url', '')
-        plan_name = ''
-        if isinstance(sub_data.get('plan'), dict):
-            plan_name = sub_data['plan'].get('name', '')
-        elif isinstance(user_data.get('plan'), dict):
-            plan_name = user_data['plan'].get('name', '')
+    # Now use the requests Session (with CF cookies) for API calls
+    r = session.post(
+        url_clean + "/api/v1/passport/auth/login",
+        json={"email": email, "password": password},
+        headers={
+            "Accept": "application/json", "Content-Type": "application/json",
+            "Origin": url_clean, "Referer": url_clean + "/",
+            "X-Requested-With": "XMLHttpRequest",
+        },
+        timeout=15,
+    )
 
-        used = (sub_data.get('u', 0) or 0) + (sub_data.get('d', 0) or 0)
-        transfer = sub_data.get('transfer_enable', user_data.get('transfer_enable', 0))
+    data = r.json()
+    if 'data' not in data or 'token' not in data['data']:
+        raise Exception(f"login failed: {r.text[:200]}")
 
-        return {
-            'subscribe_url': subscribe_url, 'token': token, 'auth_data': auth_data,
-            'user': {
-                'email': user_data.get('email', sub_data.get('email', '')),
-                'plan': plan_name, 'transfer_enable': transfer, 'used': used,
-                'expired_at': user_data.get('expired_at'), 'balance': user_data.get('balance', 0),
-            }
+    token = data['data']['token']
+    auth_data = data['data']['auth_data']
+
+    r_info = session.get(url_clean + "/api/v1/user/info",
+        headers={"Authorization": auth_data, "Accept": "application/json"}, timeout=10)
+    user_data = r_info.json().get('data', {}) if r_info.status_code == 200 else {}
+
+    r_sub = session.get(url_clean + "/api/v1/user/getSubscribe",
+        headers={"Authorization": auth_data, "Accept": "application/json"}, timeout=10)
+    sub_data = r_sub.json().get('data', {}) if r_sub.status_code == 200 else {}
+
+    subscribe_url = sub_data.get('subscribe_url', '') or user_data.get('subscribe_url', '')
+    plan_name = ''
+    if isinstance(sub_data.get('plan'), dict):
+        plan_name = sub_data['plan'].get('name', '')
+    elif isinstance(user_data.get('plan'), dict):
+        plan_name = user_data['plan'].get('name', '')
+
+    used = (sub_data.get('u', 0) or 0) + (sub_data.get('d', 0) or 0)
+    transfer = sub_data.get('transfer_enable', user_data.get('transfer_enable', 0))
+
+    return {
+        'subscribe_url': subscribe_url, 'token': token, 'auth_data': auth_data,
+        'user': {
+            'email': user_data.get('email', sub_data.get('email', '')),
+            'plan': plan_name, 'transfer_enable': transfer, 'used': used,
+            'expired_at': user_data.get('expired_at'), 'balance': user_data.get('balance', 0),
         }
+    }
 
 
 def _parse_login_response(r, url_clean, session):
