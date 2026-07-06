@@ -10,8 +10,10 @@ rules:
     - "过期"
     - "剩余"
 output:
-  target: "clash"
-  pretty: true
+    target: clash
+    template: acl4ssr_full
+    fetch_rules: true
+    pretty: true
 server:
   enabled: false
   listen: ":8080"

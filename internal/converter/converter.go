@@ -38,6 +38,9 @@ func NewWithTemplate(cfg *template.Config) *Engine {
 		if len(cfg.ProxyGroups) == 0 && len(cfg.RuleSets) == 0 {
 			builtin, err := template.Builtin(cfg.Template)
 			if err == nil {
+				builtin.RuleProviders = cfg.RuleProviders
+				builtin.ProviderInterval = cfg.ProviderInterval
+				builtin.ProviderProxy = cfg.ProviderProxy
 				return &Engine{tmplCfg: builtin}
 			}
 		}
@@ -50,6 +53,9 @@ func NewWithTemplate(cfg *template.Config) *Engine {
 			if len(cfg.RuleSets) > 0 {
 				base.RuleSets = cfg.RuleSets
 			}
+			base.RuleProviders = cfg.RuleProviders
+			base.ProviderInterval = cfg.ProviderInterval
+			base.ProviderProxy = cfg.ProviderProxy
 			return &Engine{tmplCfg: base}
 		}
 	}
@@ -92,6 +98,16 @@ func (e *Engine) toClash(proxies []parser.Proxy) ([]byte, error) {
 	}
 	if len(result.Rules) > 0 {
 		out["rules"] = result.Rules
+	}
+	if len(result.RuleProviders) > 0 {
+		// Merge all providers into a single rule-providers map
+		providers := map[string]interface{}{}
+		for _, entry := range result.RuleProviders {
+			for k, v := range entry {
+				providers[k] = v
+			}
+		}
+		out["rule-providers"] = providers
 	}
 
 	return yaml.Marshal(out)

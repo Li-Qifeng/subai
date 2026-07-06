@@ -21,10 +21,11 @@ type ProxyGroup struct {
 
 // RuleSet defines a rule that maps traffic to a proxy group.
 type RuleSet struct {
-	Group    string `yaml:"group"`               // target proxy group name
-	URL      string `yaml:"url,omitempty"`        // URL to rule file (RULE-SET)
-	Rule     string `yaml:"rule,omitempty"`        // inline rule like "GEOIP,CN,DIRECT" or "MATCH,Proxy"
-	BuiltIn  string `yaml:"built_in,omitempty"`   // built-in reference like "geosite:category-ads-all"
+	Group        string `yaml:"group"`                  // target proxy group name
+	URL          string `yaml:"url,omitempty"`           // URL to rule file (RULE-SET)
+	Rule         string `yaml:"rule,omitempty"`           // inline rule like "GEOIP,CN,DIRECT" or "MATCH,Proxy"
+	BuiltIn      string `yaml:"built_in,omitempty"`      // built-in reference like "geosite:category-ads-all"
+	ProviderName string `yaml:"provider_name,omitempty"` // explicit rule-provider name (auto-gen if empty)
 }
 
 // Config is the template configuration embedded in subai.yaml.
@@ -35,7 +36,19 @@ type Config struct {
 	// FetchRules controls whether RULE-SET URLs are fetched and expanded
 	// into inline rules during conversion. Default: false (RULE-SET references).
 	// When true, rule content is downloaded from source URLs and embedded directly.
-	FetchRules bool `yaml:"fetch_rules,omitempty"`
+	FetchRules bool `yaml:"fetch_rules"`
+
+	// RuleProviders enables Clash.Meta rule-providers output.
+	// When true, generates rule-providers section + RULE-SET,name,group references.
+	// Only applies when FetchRules is false. Default: false.
+	RuleProviders bool `yaml:"rule_providers"`
+
+	// ProviderInterval is the update interval for rule-providers in seconds.
+	// Default: 86400 (24 hours).
+	ProviderInterval int `yaml:"provider_interval,omitempty"`
+
+	// ProviderProxy is the optional proxy to use for downloading rule files.
+	ProviderProxy string `yaml:"provider_proxy,omitempty"`
 
 	// Custom proxy groups (used when Template is empty or "custom")
 	ProxyGroups []ProxyGroup `yaml:"proxy_groups,omitempty"`
@@ -44,8 +57,9 @@ type Config struct {
 
 // BuildResult holds the generated proxy groups and rules.
 type BuildResult struct {
-	ProxyGroups []map[string]interface{}
-	Rules       []string
+	ProxyGroups   []map[string]interface{}
+	Rules         []string
+	RuleProviders []map[string]interface{} // rule-providers config (Clash.Meta)
 }
 
 // Builtin returns a built-in template config by name.
@@ -97,11 +111,15 @@ func AvailableCachedTemplates() []string {
 }
 
 // Build generates proxy groups and rules from a template config and proxy list.
-// If cfg.FetchRules is true, RULE-SET URLs are fetched and expanded inline.
+// Three modes:
+//   cfg.FetchRules=true     → fetch rule files, expand inline (existing)
+//   cfg.RuleProviders=true  → generate rule-providers + RULE-SET,name,group
+//   both false              → RULE-SET,url,group references (existing fallback)
 func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 	result := &BuildResult{
 		ProxyGroups: []map[string]interface{}{},
 		Rules:       []string{},
+		RuleProviders: []map[string]interface{}{},
 	}
 
 	allNames := make([]string, len(proxies))
@@ -163,33 +181,70 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 		result.ProxyGroups = append(result.ProxyGroups, group)
 	}
 
-	// Build rules: either inline (fetch) or RULE-SET references
+	// Build rules: three modes
 	if cfg.FetchRules {
-		// Fetch and expand all RULE-SET URLs into inline rules
+		// Mode 1: fetch and expand all RULE-SET URLs into inline rules
 		inlineRules, errs := ExpandRuleSets(cfg.RuleSets)
 		for _, err := range errs {
-			// Log errors but continue with partial results
 			fmt.Fprintf(ruleLogWriter, "  ⚠️  %v\n", err)
 		}
 		result.Rules = append(result.Rules, inlineRules...)
-	}
 
-	// Add non-URL rule sets (inline rules and built-in references)
-	for _, rs := range cfg.RuleSets {
-		if rs.URL != "" && cfg.FetchRules {
-			continue // already expanded above
+		// Add non-URL rule sets (inline rules only, URL-based already expanded)
+		for _, rs := range cfg.RuleSets {
+			if rs.URL != "" {
+				continue
+			}
+			rule := buildRuleLine(rs)
+			if rule != "" {
+				result.Rules = append(result.Rules, rule)
+			}
 		}
+	} else if cfg.RuleProviders {
+		// Mode 2: generate rule-providers + RULE-SET,provider,group
+		for _, rs := range cfg.RuleSets {
+			if rs.URL != "" {
+				name := rs.ProviderName
+				if name == "" {
+					name = GenerateProviderName(rs.URL)
+				}
 
-		rule := ""
-		if rs.URL != "" {
-			rule = fmt.Sprintf("RULE-SET,%s,%s", rs.URL, rs.Group)
-		} else if rs.BuiltIn != "" {
-			rule = fmt.Sprintf("RULE-SET,%s,%s", rs.BuiltIn, rs.Group)
-		} else if rs.Rule != "" {
-			rule = rs.Rule
+				// Add RULE-SET,provider,group rule
+				result.Rules = append(result.Rules, fmt.Sprintf("RULE-SET,%s,%s", name, rs.Group))
+
+				// Build provider config
+				interval := cfg.ProviderInterval
+				if interval <= 0 {
+					interval = 86400
+				}
+				provider := map[string]interface{}{
+					"type":     "http",
+					"behavior": InferBehavior(rs.URL),
+					"url":      rs.URL,
+					"interval": interval,
+				}
+				if cfg.ProviderProxy != "" {
+					provider["proxy"] = cfg.ProviderProxy
+				}
+				// Nest under provider name
+				result.RuleProviders = append(result.RuleProviders, map[string]interface{}{
+					name: provider,
+				})
+			} else {
+				// Inline / built-in rules (no provider URL)
+				rule := buildRuleLine(rs)
+				if rule != "" {
+					result.Rules = append(result.Rules, rule)
+				}
+			}
 		}
-		if rule != "" {
-			result.Rules = append(result.Rules, rule)
+	} else {
+		// Mode 3: RULE-SET,url,group references (legacy, no providers)
+		for _, rs := range cfg.RuleSets {
+			rule := buildRuleLine(rs)
+			if rule != "" {
+				result.Rules = append(result.Rules, rule)
+			}
 		}
 	}
 
@@ -203,6 +258,68 @@ var ruleLogWriter io.Writer = &noopWriter{}
 // SetLogWriter sets the writer for rule fetch logs. Pass os.Stderr for CLI output.
 func SetLogWriter(w io.Writer) {
 	ruleLogWriter = w
+}
+
+// buildRuleLine generates a single rule line from a RuleSet.
+func buildRuleLine(rs RuleSet) string {
+	if rs.URL != "" {
+		return fmt.Sprintf("RULE-SET,%s,%s", rs.URL, rs.Group)
+	}
+	if rs.BuiltIn != "" {
+		return fmt.Sprintf("RULE-SET,%s,%s", rs.BuiltIn, rs.Group)
+	}
+	if rs.Rule != "" {
+		return rs.Rule
+	}
+	return ""
+}
+
+// GenerateProviderName auto-generates a rule-provider name from a URL.
+// Extracts meaningful keywords from the URL path.
+func GenerateProviderName(rawURL string) string {
+	// Remove query string
+	if idx := strings.Index(rawURL, "?"); idx >= 0 {
+		rawURL = rawURL[:idx]
+	}
+	// Split by / and take the last meaningful segment
+	parts := strings.Split(rawURL, "/")
+	for i := len(parts) - 1; i >= 0; i-- {
+		part := strings.TrimSpace(parts[i])
+		if part == "" {
+			continue
+		}
+		// Remove file extension
+		if idx := strings.Index(part, "."); idx >= 0 {
+			part = part[:idx]
+		}
+		// Remove version/commit-like segments
+		if len(part) < 3 || strings.Contains(part, "@") {
+			continue
+		}
+		// Convert to lowercase snake_case
+		name := strings.ToLower(part)
+		name = strings.NewReplacer("-", "_", " ", "_").Replace(name)
+		// Prepend project name if available
+		return name
+	}
+	// Fallback: use last path segment
+	return "ruleset"
+}
+
+// InferBehavior determines the rule-provider behavior from a URL.
+// Uses heuristics based on common rule file naming conventions.
+func InferBehavior(rawURL string) string {
+	lower := strings.ToLower(rawURL)
+	// IP/CIDR files
+	if strings.Contains(lower, "ip") || strings.Contains(lower, "cidr") {
+		return "ipcidr"
+	}
+	// Domain-only files
+	if strings.Contains(lower, "domain") {
+		return "domain"
+	}
+	// Default: classical (safe for mixed rule files)
+	return "classical"
 }
 
 type noopWriter struct{}
@@ -358,9 +475,9 @@ func AvailableTemplates() []string {
 	return []string{"basic", "acl4ssr_full", "acl4ssr_lite", "loyalsoldier"}
 }
 
-// HasTemplate returns true if the given name is a valid built-in template.
+// HasTemplate returns true if the given name is a valid built-in or cached template.
 func HasTemplate(name string) bool {
-	for _, t := range AvailableTemplates() {
+	for _, t := range AvailableCachedTemplates() {
 		if t == name {
 			return true
 		}
