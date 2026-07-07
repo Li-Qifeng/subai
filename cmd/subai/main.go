@@ -884,6 +884,273 @@ Examples:
 	}
 	cmd.AddCommand(removeCmd)
 
+	// Patch command
+	cmd.AddCommand(newRulePatchCmd())
+
+	// Order command
+	cmd.AddCommand(newRuleOrderCmd())
+
+	return cmd
+}
+
+// newRulePatchCmd creates the "subai rule patch" subcommand.
+func newRulePatchCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "patch",
+		Short: "Manage rule patches (inline rule insertions)",
+		Long: `Manage rule patches — custom inline rules inserted at positions in the rules list.
+
+Positions:
+  top             — insert at the beginning
+  bottom          — insert at the end
+  before:<target> — insert before the rule matching <target> (URL/name substring)
+  after:<target>  — insert after the rule matching <target>
+
+Examples:
+  subai rule patch add "DOMAIN-SUFFIX,example.com,Proxy" --position top --id my-patch
+  subai rule patch add "GEOIP,CN,DIRECT" --position before:MATCH --id geoip-cn
+  subai rule patch list
+  subai rule patch remove my-patch
+  subai rule patch clear`,
+	}
+
+	addCmd := &cobra.Command{
+		Use:   "add <rule>",
+		Short: "Add a rule patch at a position",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ruleText := args[0]
+			patchID, _ := cmd.Flags().GetString("id")
+			position, _ := cmd.Flags().GetString("position")
+
+			if patchID == "" {
+				return fmt.Errorf("--id is required")
+			}
+			if position == "" {
+				return fmt.Errorf("--position is required (top/bottom/before:X/after:X)")
+			}
+
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			// Check duplicate ID
+			for _, p := range cfg.Output.Template.RulePatches {
+				if p.ID == patchID {
+					return fmt.Errorf("patch %q already exists", patchID)
+				}
+			}
+
+			cfg.Output.Template.RulePatches = append(cfg.Output.Template.RulePatches, template.RulePatch{
+				ID:       patchID,
+				Position: position,
+				Rule:     ruleText,
+			})
+
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+			fmt.Printf("  ✅ Added patch \033[33m%s\033[0m at position \033[36m%s\033[0m\n", patchID, position)
+			return nil
+		},
+	}
+	addCmd.Flags().String("id", "", "Unique patch identifier (required)")
+	addCmd.Flags().String("position", "", "Insertion position: top/bottom/before:X/after:X (required)")
+	cmd.AddCommand(addCmd)
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List configured rule patches",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			patches := cfg.Output.Template.RulePatches
+			if len(patches) == 0 {
+				fmt.Println("No rule patches configured.")
+				return nil
+			}
+
+			fmt.Printf("  %d rule patch(es):\n", len(patches))
+			for _, p := range patches {
+				fmt.Printf("    \033[33m%-24s\033[0m [\033[36m%s\033[0m] %s\n", p.ID, p.Position, p.Rule)
+			}
+			return nil
+		},
+	}
+	cmd.AddCommand(listCmd)
+
+	removeCmd := &cobra.Command{
+		Use:   "remove <id>",
+		Short: "Remove a rule patch by ID",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id := args[0]
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			found := false
+			var updated []template.RulePatch
+			for _, p := range cfg.Output.Template.RulePatches {
+				if p.ID == id {
+					found = true
+					continue
+				}
+				updated = append(updated, p)
+			}
+			if !found {
+				return fmt.Errorf("patch %q not found", id)
+			}
+
+			cfg.Output.Template.RulePatches = updated
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+			fmt.Printf("  ✅ Removed patch \033[33m%s\033[0m\n", id)
+			return nil
+		},
+	}
+	cmd.AddCommand(removeCmd)
+
+	clearCmd := &cobra.Command{
+		Use:   "clear",
+		Short: "Remove all rule patches",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			count := len(cfg.Output.Template.RulePatches)
+			if count == 0 {
+				fmt.Println("No patches to clear.")
+				return nil
+			}
+
+			cfg.Output.Template.RulePatches = nil
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+			fmt.Printf("  ✅ Cleared %d patch(es)\n", count)
+			return nil
+		},
+	}
+	cmd.AddCommand(clearCmd)
+
+	return cmd
+}
+
+// newRuleOrderCmd creates the "subai rule order" subcommand.
+func newRuleOrderCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "order <id>",
+		Short: "Reorder rule sets in config",
+		Long: `Reorder rule sets by moving them up, down, or to a specific position.
+
+The <id> can be a rule identifier, URL substring, or provider name.
+Use --move-up / --move-down / --to <index> to specify the target position.
+
+Examples:
+  subai rule order blackmatrix7/OpenAI --move-up
+  subai rule order acl4ssr/BanAD --move-down
+  subai rule order "Netflix" --to 0`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := strings.ToLower(args[0])
+			moveUp, _ := cmd.Flags().GetBool("move-up")
+			moveDown, _ := cmd.Flags().GetBool("move-down")
+			toIndex, _ := cmd.Flags().GetInt("to")
+
+			// Validate exactly one flag
+			modeCount := 0
+			if moveUp {
+				modeCount++
+			}
+			if moveDown {
+				modeCount++
+			}
+			if cmd.Flags().Changed("to") {
+				modeCount++
+			}
+			if modeCount != 1 {
+				return fmt.Errorf("exactly one of --move-up, --move-down, or --to <index> is required")
+			}
+
+			cfg, err := config.Load(cfgFile)
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+
+			// Find matching rules
+			var matched []int
+			for i, rs := range cfg.Output.Template.RuleSets {
+				lowerURL := strings.ToLower(rs.URL)
+				lowerName := strings.ToLower(rs.ProviderName)
+				lowerGroup := strings.ToLower(rs.Group)
+				if strings.Contains(lowerURL, query) || strings.Contains(lowerName, query) || strings.Contains(lowerGroup, query) {
+					matched = append(matched, i)
+				}
+			}
+
+			if len(matched) == 0 {
+				return fmt.Errorf("no rule sets matching %q found in config", args[0])
+			}
+			if len(matched) > 1 {
+				return fmt.Errorf("multiple rule sets match %q; be more specific\n  Matched: %v", args[0], matched)
+			}
+
+			idx := matched[0]
+			rules := cfg.Output.Template.RuleSets
+			newIdx := idx
+
+			switch {
+			case moveUp:
+				if idx == 0 {
+					return fmt.Errorf("rule is already at the top of the list")
+				}
+				newIdx = idx - 1
+			case moveDown:
+				if idx == len(rules)-1 {
+					return fmt.Errorf("rule is already at the bottom of the list")
+				}
+				newIdx = idx + 1
+			case cmd.Flags().Changed("to"):
+				if toIndex < 0 || toIndex >= len(rules) {
+					return fmt.Errorf("--to %d is out of range (valid: 0-%d)", toIndex, len(rules)-1)
+				}
+				newIdx = toIndex
+			}
+
+			// Reorder by removing then inserting at new position
+			item := rules[idx]
+			rules = append(rules[:idx], rules[idx+1:]...)
+
+			// Adjust newIdx after removal if needed
+			if newIdx > idx {
+				newIdx--
+			}
+
+			// Insert at new position
+			rules = append(rules, item) // make room
+			copy(rules[newIdx+1:], rules[newIdx:])
+			rules[newIdx] = item
+
+			cfg.Output.Template.RuleSets = rules
+			if err := cfg.Save(cfgFile); err != nil {
+				return fmt.Errorf("save config: %w", err)
+			}
+			fmt.Printf("  ✅ Moved rule to position %d\n", newIdx)
+			return nil
+		},
+	}
+	cmd.Flags().Bool("move-up", false, "Move the rule up one position")
+	cmd.Flags().Bool("move-down", false, "Move the rule down one position")
+	cmd.Flags().Int("to", -1, "Move the rule to a specific index (0-based)")
 	return cmd
 }
 

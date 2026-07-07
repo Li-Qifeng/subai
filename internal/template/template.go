@@ -9,14 +9,14 @@ import (
 	"github.com/user/subai/internal/parser"
 )
 
-// ProxyGroup defines a Clash proxy group.
+// ProxyGroups are custom proxy groups (used when Template is empty or "custom")
 type ProxyGroup struct {
 	Name     string   `yaml:"name"`
-	Type     string   `yaml:"type"`
-	Proxies  []string `yaml:"proxies,omitempty"` // static proxy list
-	Filter   string   `yaml:"filter,omitempty"`  // regex to match proxy names (used at build time)
-	URL      string   `yaml:"url,omitempty"`      // health check URL for url-test/fallback
-	Interval int      `yaml:"interval,omitempty"`  // health check interval
+	Type     string   `yaml:"type"`               // select, url-test, fallback, load-balance, relay
+	Proxies  []string `yaml:"proxies,omitempty"`   // proxy names, "*" = all
+	Filter   string   `yaml:"filter,omitempty"`    // regex to auto-select proxies
+	URL      string   `yaml:"url,omitempty"`       // test URL for url-test/fallback
+	Interval int      `yaml:"interval,omitempty"`  // test interval in seconds
 }
 
 // RuleSet defines a rule that maps traffic to a proxy group.
@@ -26,6 +26,19 @@ type RuleSet struct {
 	Rule         string `yaml:"rule,omitempty"`           // inline rule like "GEOIP,CN,DIRECT" or "MATCH,Proxy"
 	BuiltIn      string `yaml:"built_in,omitempty"`      // built-in reference like "geosite:category-ads-all"
 	ProviderName string `yaml:"provider_name,omitempty"` // explicit rule-provider name (auto-gen if empty)
+}
+
+// RulePatch defines a custom rule inserted at a specific position.
+// Position formats:
+//
+//	"top"               — insert at the beginning of the rules list
+//	"bottom"            — insert at the end of the rules list
+//	"before:<target>"   — insert before the rule matching target (URL/name substring)
+//	"after:<target>"    — insert after the rule matching target
+type RulePatch struct {
+	ID       string `yaml:"id"`                // unique patch identifier
+	Position string `yaml:"position"`           // "top", "bottom", "before:X", "after:X"
+	Rule     string `yaml:"rule"`               // rule line to insert, e.g. "DOMAIN-SUFFIX,example.com,Proxy"
 }
 
 // Config is the template configuration embedded in subai.yaml.
@@ -53,6 +66,10 @@ type Config struct {
 	// Custom proxy groups (used when Template is empty or "custom")
 	ProxyGroups []ProxyGroup `yaml:"proxy_groups,omitempty"`
 	RuleSets    []RuleSet    `yaml:"rule_sets,omitempty"`
+
+	// RulePatches are custom inline rules inserted at specific positions
+	// in the generated rules list. Applied in config order after main rules are built.
+	RulePatches []RulePatch `yaml:"rule_patches,omitempty"`
 }
 
 // BuildResult holds the generated proxy groups and rules.
@@ -248,6 +265,11 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 		}
 	}
 
+	// Apply rule patches (inline rule insertions)
+	if len(cfg.RulePatches) > 0 {
+		result.Rules = ApplyPatches(result.Rules, cfg.RulePatches)
+	}
+
 	return result
 }
 
@@ -320,6 +342,115 @@ func InferBehavior(rawURL string) string {
 	}
 	// Default: classical (safe for mixed rule files)
 	return "classical"
+}
+
+// ApplyPatches inserts rule patches into the rules slice in place.
+// Patches are applied in order: "top" → "before:X" → "after:X" → "bottom".
+func ApplyPatches(rules []string, patches []RulePatch) []string {
+	if len(patches) == 0 {
+		return rules
+	}
+
+	// Separate patches by type
+	var tops, bottoms []RulePatch
+	type positionedPatch struct {
+		patch    RulePatch
+		isBefore bool // false = after
+	}
+	var positioned []positionedPatch
+
+	for _, p := range patches {
+		switch {
+		case p.Position == "top" || p.Position == "beginning":
+			tops = append(tops, p)
+		case p.Position == "bottom" || p.Position == "end":
+			bottoms = append(bottoms, p)
+		case strings.HasPrefix(p.Position, "before:") || strings.HasPrefix(p.Position, "before "):
+			target := strings.TrimPrefix(p.Position, "before:")
+			target = strings.TrimPrefix(target, "before ")
+			target = strings.TrimSpace(target)
+			positioned = append(positioned, positionedPatch{patch: p, isBefore: true})
+			_ = target // evaluated at apply time
+		case strings.HasPrefix(p.Position, "after:") || strings.HasPrefix(p.Position, "after "):
+			target := strings.TrimPrefix(p.Position, "after:")
+			target = strings.TrimPrefix(target, "after ")
+			target = strings.TrimSpace(target)
+			positioned = append(positioned, positionedPatch{patch: p, isBefore: false})
+			_ = target
+		default:
+			fmt.Fprintf(ruleLogWriter, "  ⚠️  RulePatch %q: unknown position %q (use top/bottom/before:X/after:X)\n", p.ID, p.Position)
+		}
+	}
+
+	result := make([]string, 0, len(rules)+len(patches))
+
+	// 1. Tops
+	for _, p := range tops {
+		if p.Rule != "" {
+			result = append(result, p.Rule)
+		}
+	}
+
+	// 2. Main rules with positioned patches
+	used := make([]bool, len(positioned))
+	for _, rule := range rules {
+		// Check if any "before:X" patches target this rule
+		for i, pp := range positioned {
+			if pp.isBefore && !used[i] && matchesPatchTarget(rule, patchTarget(pp.patch)) {
+				result = append(result, pp.patch.Rule)
+				used[i] = true
+			}
+		}
+
+		result = append(result, rule)
+
+		// Check if any "after:X" patches target this rule
+		for i, pp := range positioned {
+			if !pp.isBefore && !used[i] && matchesPatchTarget(rule, patchTarget(pp.patch)) {
+				result = append(result, pp.patch.Rule)
+				used[i] = true
+			}
+		}
+	}
+
+	// 3. Unmatched positioned patches go to bottom
+	for i, pp := range positioned {
+		if !used[i] {
+			if pp.patch.Rule != "" {
+				result = append(result, pp.patch.Rule)
+			}
+		}
+	}
+
+	// 4. Bottoms
+	for _, p := range bottoms {
+		if p.Rule != "" {
+			result = append(result, p.Rule)
+		}
+	}
+
+	return result
+}
+
+// patchTarget extracts the target substring from a patch's Position field.
+// "before:OpenAI" → "OpenAI", "after:apple" → "apple"
+func patchTarget(p RulePatch) string {
+	t := p.Position
+	for _, prefix := range []string{"before:", "before ", "after:", "after "} {
+		if strings.HasPrefix(t, prefix) {
+			return strings.ToLower(strings.TrimSpace(t[len(prefix):]))
+		}
+	}
+	return ""
+}
+
+// matchesPatchTarget checks if a rule line matches a patch target.
+func matchesPatchTarget(ruleLine, target string) bool {
+	if target == "" {
+		return false
+	}
+	lower := strings.ToLower(ruleLine)
+	return strings.Contains(lower, target)
 }
 
 type noopWriter struct{}
