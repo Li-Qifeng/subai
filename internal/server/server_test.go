@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -479,5 +480,202 @@ func TestProxyToURI_HTTP(t *testing.T) {
 	})
 	if !strings.HasPrefix(uri, "http://") {
 		t.Errorf("expected http:// prefix, got %q", uri)
+	}
+}
+
+// --- Auto-refresh & webhook tests ---
+
+func TestWithAutoRefresh(t *testing.T) {
+	cfgPath := writeTestConfig(t, `sources: []`)
+	s := New(":8080", "", cfgPath)
+	s.WithAutoRefresh(5*time.Minute, []string{"http://example.com/hook"}, "/tmp/output.yaml")
+
+	if !s.autoRefresh {
+		t.Error("autoRefresh should be true")
+	}
+	if s.refreshInterval != 5*time.Minute {
+		t.Errorf("expected 5m interval, got %v", s.refreshInterval)
+	}
+	if len(s.webhookURLs) != 1 || s.webhookURLs[0] != "http://example.com/hook" {
+		t.Errorf("unexpected webhook URLs: %v", s.webhookURLs)
+	}
+	if s.outputPath != "/tmp/output.yaml" {
+		t.Errorf("expected /tmp/output.yaml, got %q", s.outputPath)
+	}
+}
+
+func TestRenderClashBytes(t *testing.T) {
+	cfg := &config.Config{
+		Output: config.Output{Target: "clash", Pretty: true},
+	}
+	proxies := parser.ProxyList{
+		{Name: "SS-Node", Type: "ss", Server: "1.1.1.1", Port: 443, Cipher: "aes-256-gcm", Password: "sspass"},
+	}
+
+	s := &Server{}
+	data := s.renderClashBytes(cfg, proxies)
+	if len(data) == 0 {
+		t.Fatal("expected non-empty data")
+	}
+
+	var result map[string]interface{}
+	if err := yaml.Unmarshal(data, &result); err != nil {
+		t.Fatalf("invalid YAML: %v", err)
+	}
+	if result["proxies"] == nil {
+		t.Error("missing proxies")
+	}
+}
+
+func TestRenderClashBytes_EmptyProxies(t *testing.T) {
+	cfg := &config.Config{
+		Output: config.Output{Target: "clash", Pretty: true},
+	}
+	s := &Server{}
+	data := s.renderClashBytes(cfg, parser.ProxyList{})
+	if len(data) == 0 {
+		t.Fatal("expected non-empty data")
+	}
+}
+
+func TestRenderBase64Bytes(t *testing.T) {
+	proxies := parser.ProxyList{
+		{Name: "SS-Node", Type: "ss", Server: "1.1.1.1", Port: 443, Cipher: "aes-256-gcm", Password: "sspass"},
+	}
+	s := &Server{}
+	data := s.renderBase64Bytes(proxies)
+	if len(data) == 0 {
+		t.Error("expected non-empty data")
+	}
+}
+
+func TestRenderBase64Bytes_Empty(t *testing.T) {
+	s := &Server{}
+	data := s.renderBase64Bytes(parser.ProxyList{})
+	if len(data) != 0 {
+		t.Errorf("expected empty, got %d bytes", len(data))
+	}
+}
+
+func TestRefreshAndNotify_NoSources(t *testing.T) {
+	cfgPath := writeTestConfig(t, `sources: []
+output:
+  target: clash
+  pretty: true`)
+	s := New(":8080", "", cfgPath)
+
+	// Should not crash — just log and return
+	s.refreshAndNotify()
+}
+
+func TestRefreshAndNotify_WithOutput(t *testing.T) {
+	cfgPath := writeTestConfig(t, `sources: []
+output:
+  target: clash
+  pretty: true`)
+	s := New(":8080", "", cfgPath)
+	s.WithAutoRefresh(1*time.Hour, nil, "")
+
+	// Mock writeFile to capture output
+	var writtenPath string
+	SetWriteFile(func(path string, data []byte) error {
+		writtenPath = path
+		return nil
+	})
+	defer ResetWriteFile()
+
+	s.outputPath = "/tmp/test-output.yaml"
+	s.refreshAndNotify()
+
+	// With no sources, should not write anything (no proxies)
+	if writtenPath != "" {
+		t.Logf("writeFile called with %q (no proxies expected)", writtenPath)
+	}
+}
+
+func TestWebhookClashAPI(t *testing.T) {
+	// Start a test HTTP server to receive the webhook
+	received := make(chan struct{}, 1)
+	hookServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPut {
+			body, _ := io.ReadAll(r.Body)
+			var payload map[string]string
+			json.Unmarshal(body, &payload)
+			if payload["path"] == "/tmp/clash.yaml" {
+				received <- struct{}{}
+			}
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer hookServer.Close()
+
+	cfgPath := writeTestConfig(t, `sources: []`)
+	s := New(":8080", "", cfgPath)
+	s.WithAutoRefresh(1*time.Hour, []string{hookServer.URL + "/configs?force=true"}, "/tmp/clash.yaml")
+
+	// Trigger webhook sending
+	s.sendWebhooks("/tmp/clash.yaml")
+
+	// Wait for the webhook to be received
+	select {
+	case <-received:
+		// success
+	case <-time.After(3 * time.Second):
+		t.Fatal("webhook was not received within timeout")
+	}
+}
+
+func TestWebhookSimplePOST(t *testing.T) {
+	received := make(chan struct{}, 1)
+	hookServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			body, _ := io.ReadAll(r.Body)
+			var payload map[string]interface{}
+			json.Unmarshal(body, &payload)
+			if payload["event"] == "config_updated" {
+				received <- struct{}{}
+			}
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer hookServer.Close()
+
+	cfgPath := writeTestConfig(t, `sources: []`)
+	s := New(":8080", "", cfgPath)
+	s.WithAutoRefresh(1*time.Hour, []string{hookServer.URL}, "/tmp/out.yaml")
+
+	s.sendWebhooks("/tmp/out.yaml")
+
+	select {
+	case <-received:
+		// success
+	case <-time.After(3 * time.Second):
+		t.Fatal("webhook POST was not received within timeout")
+	}
+}
+
+func TestWebhookTimeout(t *testing.T) {
+	// Server that never responds
+	slowServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(30 * time.Second) // longer than client timeout
+	}))
+	defer slowServer.Close()
+
+	cfgPath := writeTestConfig(t, `sources: []`)
+	s := New(":8080", "", cfgPath)
+	s.WithAutoRefresh(1*time.Hour, []string{slowServer.URL}, "")
+
+	// Should not block forever — client timeout is 10s
+	done := make(chan struct{}, 1)
+	go func() {
+		s.sendWebhooks("")
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-done:
+		// success — didn't block
+	case <-time.After(15 * time.Second):
+		t.Fatal("sendWebhooks blocked for too long")
 	}
 }

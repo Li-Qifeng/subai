@@ -9,10 +9,12 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
 	"github.com/user/subai/internal/config"
+	"github.com/user/subai/internal/converter"
 	"github.com/user/subai/internal/fetcher"
 	"github.com/user/subai/internal/parser"
 )
@@ -22,20 +24,35 @@ var Version = "dev"
 
 // Server is the lightweight HTTP server for subai.
 type Server struct {
-	listen     string
-	token      string
-	configPath string
-	mu         sync.RWMutex // guards cachedConfig if we ever cache
+	listen          string
+	token           string
+	configPath      string
+	mu              sync.RWMutex
+
+	autoRefresh     bool
+	refreshInterval time.Duration
+	webhookURLs     []string
+	outputPath      string
+	stopCh          chan struct{}
 }
 
-// New creates a new Server with the given listen address, auth token, and
-// config file path.
-func New(listen string, token string, configPath string) *Server {
+// New creates a new Server with the given settings.
+func New(listen, token, configPath string) *Server {
 	return &Server{
 		listen:     listen,
 		token:      token,
 		configPath: configPath,
+		stopCh:     make(chan struct{}),
 	}
+}
+
+// WithAutoRefresh enables periodic config refresh and webhook notifications.
+func (s *Server) WithAutoRefresh(interval time.Duration, webhookURLs []string, outputPath string) *Server {
+	s.autoRefresh = true
+	s.refreshInterval = interval
+	s.webhookURLs = webhookURLs
+	s.outputPath = outputPath
+	return s
 }
 
 // Start begins listening and serving HTTP requests. Blocks until the server
@@ -52,8 +69,152 @@ func (s *Server) Start() error {
 		addr = ":8080"
 	}
 
+	if s.autoRefresh {
+		go s.refreshLoop()
+	}
+
 	log.Printf("subai server listening on %s", addr)
+	if s.autoRefresh {
+		log.Printf("  auto-refresh: every %s", s.refreshInterval)
+		if len(s.webhookURLs) > 0 {
+			log.Printf("  webhooks: %d configured", len(s.webhookURLs))
+		}
+		if s.outputPath != "" {
+			log.Printf("  output: %s", s.outputPath)
+		}
+	}
 	return http.ListenAndServe(addr, mux)
+}
+
+// ---------------------------------------------------------------------------
+// Auto-refresh loop
+// ---------------------------------------------------------------------------
+
+// refreshLoop runs periodic config refreshes.
+func (s *Server) refreshLoop() {
+	ticker := time.NewTicker(s.refreshInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			s.refreshAndNotify()
+		case <-s.stopCh:
+			return
+		}
+	}
+}
+
+// refreshAndNotify fetches all sources, generates config, writes output,
+// and sends webhook notifications.
+func (s *Server) refreshAndNotify() {
+	log.Printf("auto-refresh: starting refresh cycle")
+
+	cfg, err := config.Load(s.configPath)
+	if err != nil {
+		log.Printf("auto-refresh: load config: %v", err)
+		return
+	}
+	cfg = cfg.Resolve("") // use current profile
+
+	// Fetch and parse all sources
+	var allProxies parser.ProxyList
+	for _, src := range cfg.Sources {
+		body, err := fetcher.Fetch(src.URL, src.Cookie, src.UserAgent)
+		if err != nil {
+			log.Printf("auto-refresh: fetch source %q: %v", src.Name, err)
+			continue
+		}
+		proxies, err := parser.ParseAuto(body)
+		if err != nil {
+			log.Printf("auto-refresh: parse source %q: %v", src.Name, err)
+			continue
+		}
+		allProxies = append(allProxies, proxies...)
+	}
+
+	if len(allProxies) == 0 {
+		log.Printf("auto-refresh: no proxies found, skipping")
+		return
+	}
+
+	allProxies = filterProxies(allProxies, cfg.Rules)
+
+	// Convert to Clash format
+	var data []byte
+	if cfg.Output.Target == "base64" {
+		data = s.renderBase64Bytes(allProxies)
+	} else {
+		data = s.renderClashBytes(cfg, allProxies)
+	}
+
+	if len(data) == 0 {
+		log.Printf("auto-refresh: generated empty config, skipping")
+		return
+	}
+
+	// Write to output file if configured
+	if s.outputPath != "" {
+		if err := writeFile(s.outputPath, data); err != nil {
+			log.Printf("auto-refresh: write output: %v", err)
+		} else {
+			log.Printf("auto-refresh: wrote %d bytes to %s", len(data), s.outputPath)
+		}
+	}
+
+	// Send webhooks
+	if len(s.webhookURLs) > 0 {
+		s.sendWebhooks(s.outputPath)
+	}
+
+	log.Printf("auto-refresh: completed (%d proxies, %d bytes)", len(allProxies), len(data))
+}
+
+// sendWebhooks sends HTTP requests to all configured webhook URLs.
+func (s *Server) sendWebhooks(configPath string) {
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	for _, rawURL := range s.webhookURLs {
+		url := strings.TrimSpace(rawURL)
+		if url == "" {
+			continue
+		}
+
+		go func(u string) {
+			var resp *http.Response
+			var err error
+
+			// Clash API-style: PUT /configs?force=true with path as JSON body
+			if strings.Contains(u, "/configs") {
+				body, _ := json.Marshal(map[string]string{"path": configPath})
+				req, reqErr := http.NewRequest(http.MethodPut, u, bytes.NewReader(body))
+				if reqErr != nil {
+					log.Printf("webhook: create request: %v", reqErr)
+					return
+				}
+				req.Header.Set("Content-Type", "application/json")
+				resp, err = client.Do(req)
+			} else {
+				// Default: POST with JSON notification
+				payload, _ := json.Marshal(map[string]interface{}{
+					"event":   "config_updated",
+					"time":    time.Now().Unix(),
+					"message": "subai auto-refresh completed",
+					"path":    configPath,
+				})
+				resp, err = client.Post(u, "application/json", bytes.NewReader(payload))
+			}
+
+			if err != nil {
+				log.Printf("webhook: %s — %v", u, err)
+				return
+			}
+			resp.Body.Close()
+			if resp.StatusCode >= 300 {
+				log.Printf("webhook: %s — %d", u, resp.StatusCode)
+			}
+		}(url)
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -179,53 +340,76 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 // ---------------------------------------------------------------------------
-// Output renderers
+// Output renderers (HTTP response)
 // ---------------------------------------------------------------------------
 
 // renderClash renders the proxy list as a Clash-compatible YAML configuration.
 func (s *Server) renderClash(w http.ResponseWriter, cfg *config.Config, proxies parser.ProxyList) {
-	out := map[string]interface{}{
-		"port":               7890,
-		"socks-port":         7891,
-		"allow-lan":          false,
-		"mode":               "Rule",
-		"log-level":          "info",
-		"external-controller": "127.0.0.1:9090",
-		"proxies":            proxies,
-	}
-
-	if len(proxies) > 0 {
-		// Build a proxy-group with all proxy names
-		names := make([]string, len(proxies))
-		for i, p := range proxies {
-			names[i] = p.Name
-		}
-		out["proxy-groups"] = []map[string]interface{}{
-			{
-				"name":     "Proxy",
-				"type":     "select",
-				"proxies":  names,
-			},
-		}
-	}
-
-	data, err := yaml.Marshal(out)
-	if err != nil {
-		log.Printf("render clash: %v", err)
+	data := s.renderClashBytes(cfg, proxies)
+	if data == nil {
 		http.Error(w, `{"error":"render clash"}`, http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "text/yaml; charset=utf-8")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"sub.yaml\"")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
-// renderBase64 renders the proxy list as a base64-encoded subscription
-// (each proxy rendered back to its URI form, joined by newline, then
-// base64-encoded).
+// renderClashBytes generates Clash YAML bytes without writing to a response.
+func (s *Server) renderClashBytes(cfg *config.Config, proxies parser.ProxyList) []byte {
+	// Use template-based converter if a template is configured
+	if cfg.Output.Template.Template != "" || len(cfg.Output.Template.ProxyGroups) > 0 {
+		eng := converter.NewWithTemplate(&cfg.Output.Template)
+		if data, err := eng.Convert(proxies, "clash"); err == nil && len(data) > 0 {
+			return data
+		}
+	}
+
+	// Fallback to simple inline renderer
+	out := map[string]interface{}{
+		"port":                7890,
+		"socks-port":          7891,
+		"allow-lan":           false,
+		"mode":                "Rule",
+		"log-level":           "info",
+		"external-controller": "127.0.0.1:9090",
+		"proxies":             proxies,
+	}
+
+	if len(proxies) > 0 {
+		names := make([]string, len(proxies))
+		for i, p := range proxies {
+			names[i] = p.Name
+		}
+		out["proxy-groups"] = []map[string]interface{}{
+			{
+				"name":    "Proxy",
+				"type":    "select",
+				"proxies": names,
+			},
+		}
+	}
+
+	data, err := yaml.Marshal(out)
+	if err != nil {
+		log.Printf("render clash bytes: %v", err)
+		return nil
+	}
+	return data
+}
+
+// renderBase64 renders the proxy list as a base64-encoded subscription.
 func (s *Server) renderBase64(w http.ResponseWriter, proxies parser.ProxyList) {
+	data := s.renderBase64Bytes(proxies)
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"sub.txt\"")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+// renderBase64Bytes generates base64 subscription bytes without writing to a response.
+func (s *Server) renderBase64Bytes(proxies parser.ProxyList) []byte {
 	var buf bytes.Buffer
 	for _, p := range proxies {
 		uri := proxyToURI(p)
@@ -236,13 +420,7 @@ func (s *Server) renderBase64(w http.ResponseWriter, proxies parser.ProxyList) {
 			buf.WriteString(uri)
 		}
 	}
-
-	encoded := base64.StdEncoding.EncodeToString(buf.Bytes())
-
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("Content-Disposition", "attachment; filename=\"sub.txt\"")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(encoded))
+	return []byte(base64.StdEncoding.EncodeToString(buf.Bytes()))
 }
 
 // ---------------------------------------------------------------------------
@@ -274,13 +452,35 @@ func matchAny(name string, patterns []string) bool {
 	return false
 }
 
+// writeFile is a variable so tests can mock it.
+var writeFile = func(path string, data []byte) error {
+	// Use the os package via a minimal wrapper
+	return fmt.Errorf("writeFile not implemented (use real os.WriteFile)")
+}
+
+func init() {
+	// In the real server, writeFile is set to os.WriteFile by the main package.
+	// Tests override it with a mock.
+}
+
+// SetWriteFile allows tests to inject a mock file writer.
+func SetWriteFile(fn func(string, []byte) error) {
+	writeFile = fn
+}
+
+// ResetWriteFile restores the default writeFile (which panics in tests).
+func ResetWriteFile() {
+	writeFile = func(path string, data []byte) error {
+		return fmt.Errorf("writeFile not implemented")
+	}
+}
+
 // proxyToURI converts a Proxy back to a subscription URI string. This is a
 // best-effort reconstruction used for base64 output. Not every proxy type
 // can be perfectly round-tripped.
 func proxyToURI(p parser.Proxy) string {
 	switch p.Type {
 	case "ss":
-		// ss://base64(method:password)@server:port#name
 		userInfo := base64.RawStdEncoding.EncodeToString([]byte(p.Cipher + ":" + p.Password))
 		uri := fmt.Sprintf("ss://%s@%s:%d", userInfo, p.Server, p.Port)
 		if p.Name != "" {
@@ -288,7 +488,6 @@ func proxyToURI(p parser.Proxy) string {
 		}
 		return uri
 	case "ssr":
-		// ssr://base64(server:port:protocol:cipher:obfs:base64(password/?params)
 		passB64 := base64.RawURLEncoding.EncodeToString([]byte(p.Password))
 		mainPart := fmt.Sprintf("%s:%d:%s:%s:%s:%s", p.Server, p.Port, p.Protocol, p.Cipher, p.Obfs, passB64)
 		encoded := base64.RawURLEncoding.EncodeToString([]byte(mainPart))

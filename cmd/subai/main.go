@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/user/subai/internal/config"
@@ -88,6 +89,10 @@ Examples:
 	}
 	serveCmd.Flags().String("listen", ":8080", "Listen address")
 	serveCmd.Flags().String("token", "", "Auth token for API access")
+	serveCmd.Flags().Bool("auto-refresh", false, "Enable periodic config refresh")
+	serveCmd.Flags().String("refresh-interval", "6h", "Refresh interval (e.g. 30m, 6h, 24h)")
+	serveCmd.Flags().StringArray("webhook-url", nil, "Webhook URL to notify after refresh (repeatable)")
+	serveCmd.Flags().String("output", "", "Write generated config to file (for webhook delivery)")
 	rootCmd.AddCommand(serveCmd)
 
 	// Login command
@@ -444,6 +449,19 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}
 
 	srv := server.New(listen, token, absPath)
+
+	autoRefresh, _ := cmd.Flags().GetBool("auto-refresh")
+	if autoRefresh {
+		intervalStr, _ := cmd.Flags().GetString("refresh-interval")
+		interval, err := time.ParseDuration(intervalStr)
+		if err != nil {
+			return fmt.Errorf("invalid refresh-interval %q: %w", intervalStr, err)
+		}
+		webhookURLs, _ := cmd.Flags().GetStringArray("webhook-url")
+		outputPath, _ := cmd.Flags().GetString("output")
+		srv.WithAutoRefresh(interval, webhookURLs, outputPath)
+	}
+
 	return srv.Start()
 }
 
