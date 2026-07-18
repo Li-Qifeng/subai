@@ -1,0 +1,14 @@
+template: customized_ark
+description: 定制模板 - ARK
+proxy_groups:
+- name: Proxies
+  type: select
+rule_sets:
+- group: DIRECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/force-direct.list
+- group: Proxies
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/force-proxy.list
+- group: DIRECT
+  built_in: geoip:CN
+- group: Proxies
+  rule: '[]MATCH'

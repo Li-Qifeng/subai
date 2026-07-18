@@ -1,0 +1,86 @@
+template: customized_ytoo
+description: 定制模板 - Ytoo
+proxy_groups:
+- name: Proxies
+  type: select
+  proxies:
+  - Daily
+- name: Apple
+  type: select
+  proxies:
+  - DIRECT
+- name: MicroSoft
+  type: select
+  proxies:
+  - DIRECT
+- name: Telegram
+  type: select
+  proxies:
+  - Proxies
+- name: Streaming
+  type: select
+  proxies:
+  - Proxies
+- name: StreamingSE
+  type: select
+  proxies:
+  - DIRECT
+- name: PlusMedia
+  type: select
+  proxies:
+  - Proxies
+- name: Netease
+  type: select
+  proxies:
+  - DIRECT
+- name: Daily
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+  interval: 600
+- name: HK
+  type: select
+- name: SG
+  type: select
+- name: TW
+  type: select
+- name: JP
+  type: select
+- name: US
+  type: url-test
+  url: http://www.gstatic.com/generate_204
+  interval: 600
+rule_sets:
+- group: REJECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Hijacking.list
+- group: DIRECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/force-direct.list
+- group: Proxies
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/force-proxy.list
+- group: Apple
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Apple.list
+- group: MicroSoft
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/microsoft.list
+- group: Telegram
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Telegram.list
+- group: Streaming
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Streaming.list
+- group: Netease
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/media/netease.list
+- group: StreamingSE
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/StreamingSE.list
+- group: Proxies
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Streaming.list
+- group: PlusMedia
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/media/emby.list
+- group: Proxies
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Global.list
+- group: DIRECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/local.list
+- group: DIRECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Unbreak.list
+- group: DIRECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/China.list
+- group: DIRECT
+  built_in: geoip:CN
+- group: Proxies
+  rule: '[]MATCH'

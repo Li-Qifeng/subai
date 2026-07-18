@@ -243,5 +243,68 @@
     "description": "Aethersailor/Custom_OpenClash_Rules GFW 模式模板 (仅 3 策略组)",
     "category": "community",
     "file": "aethersailor_gfw.yaml"
+  },
+  {
+    "name": "customized_maying",
+    "title": "Customized Maying",
+    "description": "定制模板 - Maying (12 策略组)",
+    "category": "customized",
+    "file": "customized_maying.yaml"
+  },
+  {
+    "name": "customized_ytoo",
+    "title": "Customized Ytoo",
+    "description": "定制模板 - Ytoo (14 策略组)",
+    "category": "customized",
+    "file": "customized_ytoo.yaml"
+  },
+  {
+    "name": "customized_flowercloud",
+    "title": "Customized FlowerCloud",
+    "description": "定制模板 - FlowerCloud (14 策略组)",
+    "category": "customized",
+    "file": "customized_flowercloud.yaml"
+  },
+  {
+    "name": "customized_nexitally",
+    "title": "Customized Nexitally",
+    "description": "定制模板 - Nexitally (13 策略组)",
+    "category": "customized",
+    "file": "customized_nexitally.yaml"
+  },
+  {
+    "name": "customized_socloud",
+    "title": "Customized SoCloud",
+    "description": "定制模板 - SoCloud (14 策略组)",
+    "category": "customized",
+    "file": "customized_socloud.yaml"
+  },
+  {
+    "name": "customized_ark",
+    "title": "Customized ARK",
+    "description": "定制模板 - ARK (1 策略组)",
+    "category": "customized",
+    "file": "customized_ark.yaml"
+  },
+  {
+    "name": "customized_ssrcloud",
+    "title": "Customized ssrCloud",
+    "description": "定制模板 - ssrCloud (12 策略组)",
+    "category": "customized",
+    "file": "customized_ssrcloud.yaml"
+  },
+  {
+    "name": "customized_nyancat",
+    "title": "Customized Nyancat",
+    "description": "定制模板 - Nyancat (17 策略组)",
+    "category": "customized",
+    "file": "customized_nyancat.yaml"
+  },
+  {
+    "name": "customized_xianyu",
+    "title": "Customized Xianyu",
+    "description": "定制模板 - 咸鱼 (14 策略组)",
+    "category": "customized",
+    "file": "customized_xianyu.yaml"
   }
 ]

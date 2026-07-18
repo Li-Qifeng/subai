@@ -1,0 +1,79 @@
+template: customized_xianyu
+description: 定制模板 - 咸鱼
+proxy_groups:
+- name: Proxies
+  type: select
+  proxies:
+  - UrlTest
+- name: Apple
+  type: select
+  proxies:
+  - DIRECT
+- name: MicroSoft
+  type: select
+  proxies:
+  - DIRECT
+- name: Telegram
+  type: select
+  proxies:
+  - Proxies
+- name: Streaming
+  type: select
+  proxies:
+  - Proxies
+- name: StreamingSE
+  type: select
+  proxies:
+  - DIRECT
+- name: Game
+  type: select
+  proxies:
+  - DIRECT
+- name: Final
+  type: select
+  proxies:
+  - DIRECT
+- name: UrlTest
+  type: url-test
+  filter: .*
+  url: http://www.gstatic.com/generate_204
+  interval: 600
+- name: HK
+  type: select
+- name: SG
+  type: select
+- name: TW
+  type: select
+- name: JP
+  type: select
+- name: US
+  type: select
+rule_sets:
+- group: REJECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Hijacking.list
+- group: DIRECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/force-direct.list
+- group: DIRECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/local.list
+- group: Proxies
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/force-proxy.list
+- group: Apple
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Apple.list
+- group: MicroSoft
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/microsoft.list
+- group: Telegram
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Telegram.list
+- group: Streaming
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/Streaming.list
+- group: StreamingSE
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/DivineEngine/Surge/StreamingSE.list
+- group: Game
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/game.list
+- group: DIRECT
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/acl/cn-domains.txt
+- group: Proxies
+  rule: https://cdn.jsdelivr.net/gh/SleepyHeeead/subconverter-config@master/ruleset/external/acl/gfwlist.txt
+- group: DIRECT
+  built_in: geoip:CN
+- group: Final
+  rule: '[]MATCH'
