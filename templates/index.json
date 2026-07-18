@@ -112,6 +112,76 @@
     "file": "acl4ssr_online_noreject.yaml"
   },
   {
+    "name": "acl4ssr_local",
+    "title": "ACL4SSR Local",
+    "description": "ACL4SSR 本地 默认版 分组比较全",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local.yaml"
+  },
+  {
+    "name": "acl4ssr_local_mini",
+    "title": "ACL4SSR Local Mini",
+    "description": "ACL4SSR 本地 精简版",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_mini.yaml"
+  },
+  {
+    "name": "acl4ssr_local_mini_noauto",
+    "title": "ACL4SSR Local Mini NoAuto",
+    "description": "ACL4SSR 本地 精简版+无自动测速",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_mini_noauto.yaml"
+  },
+  {
+    "name": "acl4ssr_local_mini_fallback",
+    "title": "ACL4SSR Local Mini Fallback",
+    "description": "ACL4SSR 本地 精简版+fallback",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_mini_fallback.yaml"
+  },
+  {
+    "name": "acl4ssr_local_backcn",
+    "title": "ACL4SSR Local BackCN",
+    "description": "ACL4SSR 本地 回国",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_backcn.yaml"
+  },
+  {
+    "name": "acl4ssr_local_noapple",
+    "title": "ACL4SSR Local NoApple",
+    "description": "ACL4SSR 本地 无苹果分流",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_noapple.yaml"
+  },
+  {
+    "name": "acl4ssr_local_noauto",
+    "title": "ACL4SSR Local NoAuto",
+    "description": "ACL4SSR 本地 无自动测速",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_noauto.yaml"
+  },
+  {
+    "name": "acl4ssr_local_noauto_noapple",
+    "title": "ACL4SSR Local NoAuto NoApple",
+    "description": "ACL4SSR 本地 无自动测速&无苹果分流",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_noauto_noapple.yaml"
+  },
+  {
+    "name": "acl4ssr_local_nomicrosoft",
+    "title": "ACL4SSR Local NoMicrosoft",
+    "description": "ACL4SSR 本地 无微软分流",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_nomicrosoft.yaml"
+  },
+  {
+    "name": "acl4ssr_local_withgfw",
+    "title": "ACL4SSR Local WithGFW",
+    "description": "ACL4SSR 本地 GFW列表",
+    "category": "ACL4SSR",
+    "file": "acl4ssr_local_withgfw.yaml"
+  },
+  {
     "name": "basic",
     "title": "Basic",
     "description": "基础模板，仅含节点选择/自动测速/Fallback/兜底",

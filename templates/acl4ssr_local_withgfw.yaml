@@ -1,0 +1,71 @@
+template: acl4ssr_local_withgfw
+description: ACL4SSR 本地 GFW列表
+proxy_groups:
+- name: 🚀 节点选择
+  type: select
+  proxies:
+  - ♻️ 自动选择
+- name: ♻️ 自动选择
+  type: url-test
+  filter: .*
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+- name: 🌍 国外媒体
+  type: select
+  proxies:
+  - 🚀 节点选择
+- name: 📲 电报信息
+  type: select
+  proxies:
+  - 🚀 节点选择
+- name: Ⓜ️ 微软服务
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🍎 苹果服务
+  type: select
+  proxies:
+  - 🚀 节点选择
+- name: 🎯 全球直连
+  type: select
+  proxies:
+  - DIRECT
+- name: 🛑 全球拦截
+  type: select
+  proxies:
+  - REJECT
+- name: 🍃 应用净化
+  type: select
+  proxies:
+  - REJECT
+- name: 🐟 漏网之鱼
+  type: select
+  proxies:
+  - 🚀 节点选择
+rule_sets:
+- group: 🎯 全球直连
+  rule: rules/ACL4SSR/Clash/LocalAreaNetwork.list
+- group: 🛑 全球拦截
+  rule: rules/ACL4SSR/Clash/BanAD.list
+- group: 🍃 应用净化
+  rule: rules/ACL4SSR/Clash/BanProgramAD.list
+- group: 🎯 全球直连
+  rule: rules/ACL4SSR/Clash/GoogleCN.list
+- group: Ⓜ️ 微软服务
+  rule: rules/ACL4SSR/Clash/Microsoft.list
+- group: 🍎 苹果服务
+  rule: rules/ACL4SSR/Clash/Apple.list
+- group: 📲 电报信息
+  rule: rules/ACL4SSR/Clash/Telegram.list
+- group: 🌍 国外媒体
+  rule: rules/ACL4SSR/Clash/ProxyMedia.list
+- group: 🚀 节点选择
+  rule: rules/ACL4SSR/Clash/ProxyGFWlist.list
+- group: 🎯 全球直连
+  rule: rules/ACL4SSR/Clash/ChinaDomain.list
+- group: 🎯 全球直连
+  rule: rules/ACL4SSR/Clash/ChinaCompanyIp.list
+- group: 🎯 全球直连
+  built_in: geoip:CN
+- group: 🐟 漏网之鱼
+  rule: MATCH,🐟 漏网之鱼

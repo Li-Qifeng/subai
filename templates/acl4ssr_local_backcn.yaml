@@ -1,0 +1,46 @@
+template: acl4ssr_local_backcn
+description: ACL4SSR 本地 回国
+proxy_groups:
+- name: 🚀 中国代理
+  type: select
+  proxies:
+  - DIRECT
+- name: 🎯 全球直连
+  type: select
+  proxies:
+  - DIRECT
+- name: 🛑 全球拦截
+  type: select
+  proxies:
+  - REJECT
+- name: 🍃 应用净化
+  type: select
+  proxies:
+  - REJECT
+- name: 🐟 漏网之鱼
+  type: select
+  proxies:
+  - 🚀 中国代理
+rule_sets:
+- group: 🎯 全球直连
+  rule: rules/ACL4SSR/Clash/LocalAreaNetwork.list
+- group: 🛑 全球拦截
+  rule: rules/ACL4SSR/Clash/BanAD.list
+- group: 🍃 应用净化
+  rule: rules/ACL4SSR/Clash/BanProgramAD.list
+- group: 🎯 全球直连
+  rule: rules/ACL4SSR/Clash/Telegram.list
+- group: 🎯 全球直连
+  rule: rules/ACL4SSR/Clash/ProxyMedia.list
+- group: 🎯 全球直连
+  rule: rules/ACL4SSR/Clash/ProxyGFWlist.list
+- group: 🚀 中国代理
+  rule: rules/ACL4SSR/Clash/ChinaIp.list
+- group: 🚀 中国代理
+  rule: rules/ACL4SSR/Clash/ChinaDomain.list
+- group: 🚀 中国代理
+  rule: rules/ACL4SSR/Clash/ChinaCompanyIp.list
+- group: 🚀 中国代理
+  built_in: geoip:CN
+- group: 🐟 漏网之鱼
+  rule: MATCH,🐟 漏网之鱼
