@@ -1,0 +1,27 @@
+template: aethersailor_gfw
+description: Aethersailor/Custom_OpenClash_Rules GFW 模式模板 (仅 3 策略组)
+proxy_groups:
+- name: 🚀 手动选择
+  type: select
+  proxies:
+  - ♻️ 自动选择
+- name: ♻️ 自动选择
+  type: url-test
+  filter: .*
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🎯 全球直连
+  type: select
+  proxies:
+  - DIRECT
+rule_sets:
+- group: 🚀 手动选择
+  built_in: geosite:gfw
+- group: 🚀 手动选择
+  built_in: geoip:telegram
+- group: 🚀 手动选择
+  built_in: geoip:facebook
+- group: 🚀 手动选择
+  built_in: geoip:twitter
+- group: 🎯 全球直连
+  rule: MATCH,🎯 全球直连

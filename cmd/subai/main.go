@@ -393,6 +393,23 @@ func runValidate(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Fprintf(os.Stderr, "  ✅ Rules valid (%d rules)\n", len(rules))
 	}
+	// Validate template config
+	cfgTmpl := cfg.Output.Template
+	if cfgTmpl.Template != "" || len(cfgTmpl.ProxyGroups) > 0 {
+		// If using a built-in template with no custom proxy-groups, load the built-in
+		if cfgTmpl.Template != "" && template.HasTemplate(cfgTmpl.Template) && len(cfgTmpl.ProxyGroups) == 0 {
+			if builtin, err := template.Builtin(cfgTmpl.Template); err == nil {
+				cfgTmpl.ProxyGroups = builtin.ProxyGroups
+			}
+		}
+		if tmplErrs := template.Validate(&cfgTmpl); len(tmplErrs) > 0 {
+			for _, e := range tmplErrs {
+				fmt.Fprintf(os.Stderr, "  ❌ Template error: %v\n", e)
+			}
+			return fmt.Errorf("%d template error(s)", len(tmplErrs))
+		}
+		fmt.Fprintf(os.Stderr, "  ✅ Template config valid\n")
+	}
 
 	fmt.Fprintf(os.Stderr, "  ✅ Sources: %d configured\n", len(cfg.Sources))
 	return nil

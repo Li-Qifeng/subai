@@ -489,6 +489,19 @@ func Validate(cfg *Config) []error {
 			errs = append(errs, fmt.Errorf("rule_sets[%d]: one of url/rule/built_in is required", i))
 		}
 	}
+	// Validate that every rule_sets group references an existing proxy-group
+	if len(cfg.ProxyGroups) > 0 {
+		groupNames := make(map[string]bool, len(cfg.ProxyGroups))
+		for _, pg := range cfg.ProxyGroups {
+			groupNames[pg.Name] = true
+		}
+		for i, rs := range cfg.RuleSets {
+			if rs.Group != "" && !groupNames[rs.Group] {
+				errs = append(errs, fmt.Errorf(
+					"rule_sets[%d]: group %q not found in proxy-groups", i, rs.Group))
+			}
+		}
+	}
 	return errs
 }
 

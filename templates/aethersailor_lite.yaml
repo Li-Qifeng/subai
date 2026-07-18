@@ -1,0 +1,139 @@
+template: aethersailor_lite
+description: Aethersailor/Custom_OpenClash_Rules 轻量版分流模板 (15 策略组)
+proxy_groups:
+- name: 🚀 手动选择
+  type: select
+  proxies:
+  - ♻️ 自动选择
+- name: ♻️ 自动选择
+  type: url-test
+  filter: .*
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🚀 GitHub
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 📢 谷歌FCM
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🇬 谷歌服务
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🍎 苹果服务
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: Ⓜ️ 微软服务
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🎮 游戏平台
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🎮 Steam
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🚀 测速工具
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🐟 漏网之鱼
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🔀 非标端口
+  type: select
+  proxies:
+  - 🐟 漏网之鱼
+- name: 🇭🇰 香港节点
+  type: url-test
+  filter: (🇭🇰|港|\bHK(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|hk|Hong Kong|HongKong|hongkong|HONG
+    KONG|HONGKONG|深港|HKG|九龙|Kowloon|新界|沙田|荃湾|葵涌)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇺🇸 美国节点
+  type: url-test
+  filter: (🇺🇸|美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|纽约|纽纽|亚特兰大|迈阿密|华盛顿|\bUS(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|United States|UnitedStates|UNITED STATES|USA|America|AMERICA|JFK|EWR|IAD|ATL|ORD|MIA|NYC|LAX|SFO|SEA|DFW|SJC)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇯🇵 日本节点
+  type: url-test
+  filter: (🇯🇵|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|(?<!尼|-)日|\bJP(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Japan|JAPAN|JPN|NRT|HND|KIX|TYO|OSA|关西|Kansai|KANSAI)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇸🇬 新加坡节点
+  type: url-test
+  filter: (🇸🇬|新加坡|坡|狮城|\bSG(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Singapore|SINGAPORE|SIN)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇼🇸 台湾节点
+  type: url-test
+  filter: (🇹🇼|🇼🇸|台|新北|彰化|\bTW(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Taiwan|TAIWAN|TWN|TPE|ROC)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇰🇷 韩国节点
+  type: url-test
+  filter: (🇰🇷|\bKR(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Korea|KOREA|KOR|首尔|韩|韓|春川|Chuncheon|ICN)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🎯 全球直连
+  type: select
+  proxies:
+  - DIRECT
+rule_sets:
+- group: 🎯 全球直连
+  built_in: geosite:private
+- group: 🎯 全球直连
+  built_in: geoip:private
+- group: 🎯 全球直连
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Direct_Domain.yaml
+- group: 🎯 全球直连
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Direct_Classical_IP.yaml
+- group: 🚀 手动选择
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Proxy_Domain.yaml
+- group: 🚀 手动选择
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Proxy_Classical_IP.yaml
+- group: 🎯 全球直连
+  built_in: geosite:google-cn
+- group: 🎯 全球直连
+  built_in: geosite:category-games@cn
+- group: 🎯 全球直连
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Steam_CDN_Classical.yaml
+- group: 🎯 全球直连
+  built_in: geosite:category-game-platforms-download
+- group: 🎯 全球直连
+  built_in: geosite:category-public-tracker
+- group: 🚀 GitHub
+  built_in: geosite:github
+- group: 🚀 测速工具
+  built_in: geosite:category-speedtest
+- group: 🍎 苹果服务
+  built_in: geosite:apple
+- group: 🎮 Steam
+  built_in: geosite:steam
+- group: Ⓜ️ 微软服务
+  built_in: geosite:microsoft
+- group: 📢 谷歌FCM
+  built_in: geosite:googlefcm
+- group: 🇬 谷歌服务
+  built_in: geosite:google
+- group: 🚀 手动选择
+  built_in: geosite:gfw
+- group: 🎮 游戏平台
+  built_in: geosite:category-games
+- group: 🇬 谷歌服务
+  built_in: geoip:google
+- group: 🎯 全球直连
+  built_in: geosite:cn
+- group: 🎯 全球直连
+  built_in: geoip:cn
+- group: 🔀 非标端口
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Port_Direct.yaml
+- group: 🐟 漏网之鱼
+  rule: MATCH,🐟 漏网之鱼

@@ -1,0 +1,338 @@
+template: aethersailor_full
+description: Aethersailor/Custom_OpenClash_Rules 全分组防 DNS 泄漏模板 (30+ 策略组)
+proxy_groups:
+- name: 🚀 手动选择
+  type: select
+  proxies:
+  - ♻️ 自动选择
+- name: ♻️ 自动选择
+  type: url-test
+  filter: .*
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 💬 即时通讯
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🌐 社交媒体
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 📞 Talkatone
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🚀 GitHub
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🤖 ChatGPT
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🤖 Copilot
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🤖 AI服务
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🎶 TikTok
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 📹 YouTube
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🎥 Netflix
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🎥 DisneyPlus
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🎥 HBO
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🎥 PrimeVideo
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🎥 AppleTV+
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🎥 Emby
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🎻 Spotify
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 📺 Bahamut
+  type: select
+  proxies:
+  - 🇼🇸 台湾节点
+- name: 🌎 国外媒体
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🛒 国外电商
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 📢 谷歌FCM
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🇬 谷歌服务
+  type: select
+  proxies:
+  - 🚀 手动选择
+- name: 🍎 苹果服务
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: Ⓜ️ 微软服务
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 💾 OneDrive
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 💳 PayPal
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🎮 游戏平台
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🎮 Steam
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: ⏬ PT站点
+  type: select
+  proxies:
+  - 🇭🇰 香港节点
+- name: 🚀 测速工具
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🐟 漏网之鱼
+  type: select
+  proxies:
+  - 🎯 全球直连
+- name: 🔀 非标端口
+  type: select
+  proxies:
+  - 🐟 漏网之鱼
+- name: 🇭🇰 香港节点
+  type: url-test
+  filter: (🇭🇰|港|\bHK(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|hk|Hong Kong|HongKong|hongkong|HONG
+    KONG|HONGKONG|深港|HKG|九龙|Kowloon|新界|沙田|荃湾|葵涌)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇺🇸 美国节点
+  type: url-test
+  filter: (🇺🇸|美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|纽约|纽纽|亚特兰大|迈阿密|华盛顿|\bUS(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|United States|UnitedStates|UNITED STATES|USA|America|AMERICA|JFK|EWR|IAD|ATL|ORD|MIA|NYC|LAX|SFO|SEA|DFW|SJC)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇯🇵 日本节点
+  type: url-test
+  filter: (🇯🇵|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|(?<!尼|-)日|\bJP(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Japan|JAPAN|JPN|NRT|HND|KIX|TYO|OSA|关西|Kansai|KANSAI)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇸🇬 新加坡节点
+  type: url-test
+  filter: (🇸🇬|新加坡|坡|狮城|\bSG(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Singapore|SINGAPORE|SIN)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇼🇸 台湾节点
+  type: url-test
+  filter: (🇹🇼|🇼🇸|台|新北|彰化|\bTW(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Taiwan|TAIWAN|TWN|TPE|ROC)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇰🇷 韩国节点
+  type: url-test
+  filter: (🇰🇷|\bKR(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Korea|KOREA|KOR|首尔|韩|韓|春川|Chuncheon|ICN)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇨🇦 加拿大节点
+  type: url-test
+  filter: (🇨🇦|加拿大|\bCA(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Canada|CANADA|CAN|渥太华|温哥华|卡尔加里|蒙特利尔|Montreal|YVR|YYZ|YUL)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇬🇧 英国节点
+  type: url-test
+  filter: (🇬🇧|英国|Britain|United Kingdom|UNITED KINGDOM|England|伦敦|曼彻斯特|Manchester|\bUK(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|GBR|LHR|MAN)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇫🇷 法国节点
+  type: url-test
+  filter: (🇫🇷|法国|\bFR(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|France|FRANCE|FRA|巴黎|马赛|Marseille|CDG|MRS)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇩🇪 德国节点
+  type: url-test
+  filter: (🇩🇪|德国|Germany|GERMANY|\bDE(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|DEU|柏林|法兰克福|慕尼黑|Munich|MUC)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇳🇱 荷兰节点
+  type: url-test
+  filter: (🇳🇱|荷兰|Netherlands|NETHERLANDS|\bNL(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|NLD|阿姆斯特丹|AMS)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇹🇷 土耳其节点
+  type: url-test
+  filter: (🇹🇷|土耳其|Turkey|TURKEY|Türkiye|\bTR(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|TUR|IST|ANK)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🇷🇺 俄罗斯节点
+  type: url-test
+  filter: (🇷🇺|(?<!白)俄罗斯|(?<!白)俄|莫斯科|圣彼得堡|新西伯利亚|海参崴|符拉迪沃斯托克|哈巴罗夫斯克|伯力|\bRU(?:[-_ ]?\d+)?\b|Russia)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🌐 其他地区
+  type: url-test
+  filter: (^(?!.*(港|\bHK(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|hk|Hong Kong|HongKong|hongkong|HONG
+    KONG|HONGKONG|深港|HKG|🇭🇰|九龙|Kowloon|新界|沙田|荃湾|葵涌|美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|纽约|纽纽|亚特兰大|迈阿密|华盛顿|\bUS(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|United States|UnitedStates|UNITED STATES|USA|America|AMERICA|JFK|EWR|IAD|ATL|ORD|MIA|NYC|LAX|SFO|SEA|DFW|SJC|🇺🇸|日本|川日|东京|大阪|泉日|埼玉|沪日|深日|(?<!尼|-)日|\bJP(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Japan|JAPAN|JPN|NRT|HND|KIX|TYO|OSA|🇯🇵|关西|Kansai|KANSAI|新加坡|坡|狮城|\bSG(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Singapore|SINGAPORE|SIN|🇸🇬|台|新北|彰化|\bTW(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Taiwan|TAIWAN|TWN|TPE|ROC|🇹🇼|\bKR(?:[-_ ]?\d+(?:[-_
+    ]?[A-Za-z]{2,})?)?\b|Korea|KOREA|KOR|首尔|韩|韓|春川|Chuncheon|ICN|🇰🇷|加拿大|\bCA(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|Canada|CANADA|CAN|渥太华|温哥华|卡尔加里|蒙特利尔|Montreal|YVR|YYZ|YUL|🇨🇦|英国|Britain|United
+    Kingdom|UNITED KINGDOM|England|伦敦|曼彻斯特|Manchester|\bUK(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|GBR|LHR|MAN|🇬🇧|法国|\bFR(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|France|FRANCE|FRA|巴黎|马赛|Marseille|CDG|MRS|🇫🇷|德国|Germany|GERMANY|\bDE(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|DEU|柏林|法兰克福|慕尼黑|Munich|MUC|🇩🇪|荷兰|Netherlands|NETHERLANDS|\bNL(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|NLD|阿姆斯特丹|AMS|🇳🇱|土耳其|Turkey|TURKEY|Türkiye|\bTR(?:[-_
+    ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|TUR|IST|ANK|🇹🇷|🇷🇺|(?<!白)俄罗斯|(?<!白)俄|莫斯科|圣彼得堡|新西伯利亚|海参崴|符拉迪沃斯托克|哈巴罗夫斯克|伯力|\bRU(?:[-_
+    ]?\d+)?\b|Russia|家宽|家庭宽带|住宅|Residential|低倍率|低倍|(?<![\d\.])0?\.\d+(?![0-9])(?:x|倍)?|倍率[:：
+    ]?0?\.\d+)).*)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🏠 家宽节点
+  type: url-test
+  filter: (家宽|家庭宽带|住宅|Residential)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🐢 低倍率节点
+  type: url-test
+  filter: (低倍率|低倍|(?<![\d\.])0?\.\d+(?![0-9])(?:x|倍)?|倍率[:： ]?0?\.\d+)
+  url: https://cp.cloudflare.com/generate_204
+  interval: 300
+- name: 🎯 全球直连
+  type: select
+  proxies:
+  - DIRECT
+rule_sets:
+- group: 🎯 全球直连
+  built_in: geosite:private
+- group: 🎯 全球直连
+  built_in: geoip:private
+- group: 🎯 全球直连
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Direct_Domain.yaml
+- group: 🎯 全球直连
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Direct_Classical_IP.yaml
+- group: 🚀 手动选择
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Proxy_Domain.yaml
+- group: 🚀 手动选择
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Proxy_Classical_IP.yaml
+- group: 🎯 全球直连
+  built_in: geosite:google-cn
+- group: 🎯 全球直连
+  built_in: geosite:category-games@cn
+- group: 🎯 全球直连
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Steam_CDN_Classical.yaml
+- group: 🎯 全球直连
+  built_in: geosite:category-game-platforms-download
+- group: 🎯 全球直连
+  built_in: geosite:category-public-tracker
+- group: 💬 即时通讯
+  built_in: geosite:category-communication
+- group: 🌐 社交媒体
+  built_in: geosite:category-social-media-!cn
+- group: 📞 Talkatone
+  built_in: geosite:talkatone
+- group: 🤖 ChatGPT
+  built_in: geosite:openai
+- group: 💾 OneDrive
+  built_in: geosite:onedrive
+- group: 🤖 Copilot
+  built_in: geosite:bing
+- group: 🤖 AI服务
+  built_in: geosite:category-ai-!cn
+- group: 🚀 GitHub
+  built_in: geosite:github
+- group: 🚀 测速工具
+  built_in: geosite:category-speedtest
+- group: 🎮 Steam
+  built_in: geosite:steam
+- group: 📹 YouTube
+  built_in: geosite:youtube
+- group: 🎥 AppleTV+
+  built_in: geosite:apple-tvplus
+- group: 🍎 苹果服务
+  built_in: geosite:apple
+- group: Ⓜ️ 微软服务
+  built_in: geosite:microsoft
+- group: 📢 谷歌FCM
+  built_in: geosite:googlefcm
+- group: 🇬 谷歌服务
+  built_in: geosite:google
+- group: 🎶 TikTok
+  built_in: geosite:tiktok
+- group: 🎥 Netflix
+  built_in: geosite:netflix
+- group: 🎥 DisneyPlus
+  built_in: geosite:disney
+- group: 🎥 HBO
+  built_in: geosite:hbo
+- group: 🎥 PrimeVideo
+  built_in: geosite:primevideo
+- group: 🎥 Emby
+  built_in: geosite:category-emby
+- group: 🎻 Spotify
+  built_in: geosite:spotify
+- group: 📺 Bahamut
+  built_in: geosite:bahamut
+- group: 🎮 游戏平台
+  built_in: geosite:category-games
+- group: 🌎 国外媒体
+  built_in: geosite:category-entertainment
+- group: ⏬ PT站点
+  built_in: geosite:category-pt
+- group: 💳 PayPal
+  built_in: geosite:paypal
+- group: 🛒 国外电商
+  built_in: geosite:category-ecommerce
+- group: 🚀 手动选择
+  built_in: geosite:gfw
+- group: 💬 即时通讯
+  built_in: geoip:telegram
+- group: 🌐 社交媒体
+  built_in: geoip:twitter
+- group: 🌐 社交媒体
+  built_in: geoip:facebook
+- group: 🇬 谷歌服务
+  built_in: geoip:google
+- group: 🎥 Netflix
+  built_in: geoip:netflix
+- group: 🎯 全球直连
+  built_in: geosite:cn
+- group: 🎯 全球直连
+  built_in: geoip:cn
+- group: 🔀 非标端口
+  url: https://testingcf.jsdelivr.net/gh/Aethersailor/Custom_OpenClash_Rules@main/rule/Custom_Port_Direct.yaml
+- group: 🐟 漏网之鱼
+  rule: MATCH,🐟 漏网之鱼

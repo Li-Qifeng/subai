@@ -152,5 +152,26 @@
     "description": "通用模板 带自动测速",
     "category": "universal",
     "file": "universal_urltest.yaml"
+  },
+  {
+    "name": "aethersailor_full",
+    "title": "Aethersailor Full",
+    "description": "Aethersailor/Custom_OpenClash_Rules 全分组防 DNS 泄漏模板 (50 策略组)",
+    "category": "community",
+    "file": "aethersailor_full.yaml"
+  },
+  {
+    "name": "aethersailor_lite",
+    "title": "Aethersailor Lite",
+    "description": "Aethersailor/Custom_OpenClash_Rules 轻量版分流模板 (19 策略组)",
+    "category": "community",
+    "file": "aethersailor_lite.yaml"
+  },
+  {
+    "name": "aethersailor_gfw",
+    "title": "Aethersailor GFW",
+    "description": "Aethersailor/Custom_OpenClash_Rules GFW 模式模板 (仅 3 策略组)",
+    "category": "community",
+    "file": "aethersailor_gfw.yaml"
   }
 ]
