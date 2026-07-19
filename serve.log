@@ -1,4 +1,7 @@
-2026/07/19 03:03:46 subai server listening on :8088
-2026/07/19 03:03:46   auto-refresh: every 6h0m0s
-2026/07/19 03:03:46   webhooks: 1 configured
-2026/07/19 03:03:46   output: /root/subai/output/clash.yaml
+2026/07/19 11:52:05 subai server listening on :8088
+2026/07/19 11:52:05   auto-refresh: every 6h0m0s
+2026/07/19 11:52:05   webhooks: 1 configured
+2026/07/19 11:52:05   output: /root/subai/output/clash.yaml
+2026/07/19 11:52:15 fetch source "xfltd": fetch https://api2.xfltd.click/cctv/user/client/get?token=MzMxODU5OmE3NzljZjc2YmY5NTc2ZGQ3OWI4YTIzOTkyZDY3OWExMDY4ZDI5OTQ: HTTP 403
+2026/07/19 11:52:59 fetch source "xfltd": fetch https://api2.xfltd.click/cctv/user/client/get?token=MzMxODU5OmE3NzljZjc2YmY5NTc2ZGQ3OWI4YTIzOTkyZDY3OWExMDY4ZDI5OTQ: HTTP 403
+2026/07/19 11:53:00 fetch source "xfltd": fetch https://api2.xfltd.click/cctv/user/client/get?token=MzMxODU5OmE3NzljZjc2YmY5NTc2ZGQ3OWI4YTIzOTkyZDY3OWExMDY4ZDI5OTQ: HTTP 403

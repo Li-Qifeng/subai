@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -204,16 +206,18 @@ func (s *Server) refreshAndNotify() {
 	}
 
 	// Write to output file if configured
+	writeOK := true
 	if s.outputPath != "" {
 		if err := writeFile(s.outputPath, data); err != nil {
 			log.Printf("auto-refresh: write output: %v", err)
+			writeOK = false
 		} else {
 			log.Printf("auto-refresh: wrote %d bytes to %s", len(data), s.outputPath)
 		}
 	}
 
-	// Send webhooks
-	if len(s.webhookURLs) > 0 {
+	// Send webhooks only on successful write
+	if writeOK && len(s.webhookURLs) > 0 {
 		s.sendWebhooks(s.outputPath)
 	}
 
@@ -365,20 +369,16 @@ func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleRefresh triggers a config refresh by reloading the config file.
+// handleRefresh triggers a config refresh by reloading the config and
+// running a full refresh cycle.
 func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Reload the config to verify it is valid
-	_, err := config.Load(s.configPath)
-	if err != nil {
-		log.Printf("refresh: reload config: %v", err)
-		http.Error(w, fmt.Sprintf(`{"error":"refresh failed: %v"}`, err), http.StatusInternalServerError)
-		return
-	}
+	// Run a full refresh cycle (fetch sources, generate config, write output, notify)
+	s.refreshAndNotify()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -448,6 +448,10 @@ func (s *Server) renderClashBytes(cfg *config.Config, proxies parser.ProxyList) 
 // renderBase64 renders the proxy list as a base64-encoded subscription.
 func (s *Server) renderBase64(w http.ResponseWriter, proxies parser.ProxyList) {
 	data := s.renderBase64Bytes(proxies)
+	if len(data) == 0 {
+		http.Error(w, `{"error":"no proxies to render"}`, http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"sub.txt\"")
 	w.WriteHeader(http.StatusOK)
@@ -500,13 +504,7 @@ func matchAny(name string, patterns []string) bool {
 
 // writeFile is a variable so tests can mock it.
 var writeFile = func(path string, data []byte) error {
-	// Use the os package via a minimal wrapper
-	return fmt.Errorf("writeFile not implemented (use real os.WriteFile)")
-}
-
-func init() {
-	// In the real server, writeFile is set to os.WriteFile by the main package.
-	// Tests override it with a mock.
+	return os.WriteFile(path, data, 0644)
 }
 
 // SetWriteFile allows tests to inject a mock file writer.
@@ -514,10 +512,10 @@ func SetWriteFile(fn func(string, []byte) error) {
 	writeFile = fn
 }
 
-// ResetWriteFile restores the default writeFile (which panics in tests).
+// ResetWriteFile restores the default writeFile.
 func ResetWriteFile() {
 	writeFile = func(path string, data []byte) error {
-		return fmt.Errorf("writeFile not implemented")
+		return os.WriteFile(path, data, 0644)
 	}
 }
 
@@ -525,18 +523,34 @@ func ResetWriteFile() {
 // best-effort reconstruction used for base64 output. Not every proxy type
 // can be perfectly round-tripped.
 func proxyToURI(p parser.Proxy) string {
+	// URL-encode the name fragment to handle spaces and special chars
+	nameFragment := ""
+	if p.Name != "" {
+		nameFragment = "#" + url.PathEscape(p.Name)
+	}
+
 	switch p.Type {
 	case "ss":
-		userInfo := base64.RawStdEncoding.EncodeToString([]byte(p.Cipher + ":" + p.Password))
+		userInfo := base64.RawURLEncoding.EncodeToString([]byte(p.Cipher + ":" + p.Password))
 		uri := fmt.Sprintf("ss://%s@%s:%d", userInfo, p.Server, p.Port)
-		if p.Name != "" {
-			uri += "#" + p.Name
-		}
-		return uri
+		return uri + nameFragment
 	case "ssr":
-		passB64 := base64.RawURLEncoding.EncodeToString([]byte(p.Password))
+		passB64 := base64.URLEncoding.EncodeToString([]byte(p.Password))
 		mainPart := fmt.Sprintf("%s:%d:%s:%s:%s:%s", p.Server, p.Port, p.Protocol, p.Cipher, p.Obfs, passB64)
-		encoded := base64.RawURLEncoding.EncodeToString([]byte(mainPart))
+		params := ""
+		if p.ObfsParam != "" {
+			params += "&obfsparam=" + base64.URLEncoding.EncodeToString([]byte(p.ObfsParam))
+		}
+		if p.ProtocolParam != "" {
+			params += "&protoparam=" + base64.URLEncoding.EncodeToString([]byte(p.ProtocolParam))
+		}
+		if p.Name != "" {
+			params += "&remarks=" + base64.URLEncoding.EncodeToString([]byte(p.Name))
+		}
+		if params != "" {
+			mainPart += "/?" + strings.TrimPrefix(params, "&")
+		}
+		encoded := base64.URLEncoding.EncodeToString([]byte(mainPart))
 		return "ssr://" + encoded
 	case "vmess":
 		vmess := map[string]interface{}{
@@ -548,7 +562,6 @@ func proxyToURI(p parser.Proxy) string {
 			"aid":  "0",
 			"net":  p.Network,
 			"type": "none",
-			"tls":  "",
 		}
 		if p.Network == "ws" && p.WSPath != "" {
 			vmess["path"] = p.WSPath
@@ -559,86 +572,99 @@ func proxyToURI(p parser.Proxy) string {
 		if p.Encryption != "" {
 			vmess["scy"] = p.Encryption
 		}
-		jsonBytes, _ := json.Marshal(vmess)
+		if p.Security == "tls" {
+			vmess["tls"] = "tls"
+		}
+		jsonBytes, err := json.Marshal(vmess)
+		if err != nil {
+			return ""
+		}
 		return "vmess://" + base64.RawURLEncoding.EncodeToString(jsonBytes)
 	case "vless":
 		u := fmt.Sprintf("vless://%s@%s:%d", p.UUID, p.Server, p.Port)
-		params := []string{"encryption=" + p.Encryption, "type=" + p.Network}
+		q := url.Values{}
+		if p.Encryption == "" {
+			q.Set("encryption", "none")
+		} else {
+			q.Set("encryption", p.Encryption)
+		}
+		q.Set("type", p.Network)
 		if p.Security != "" {
-			params = append(params, "security="+p.Security)
+			q.Set("security", p.Security)
 		}
 		if p.SNI != "" {
-			params = append(params, "sni="+p.SNI)
+			q.Set("sni", p.SNI)
 		}
 		if p.Flow != "" {
-			params = append(params, "flow="+p.Flow)
+			q.Set("flow", p.Flow)
 		}
-		u += "?" + strings.Join(params, "&")
-		if p.Name != "" {
-			u += "#" + p.Name
+		if p.Fingerprint != "" {
+			q.Set("fp", p.Fingerprint)
 		}
-		return u
+		if p.PublicKey != "" {
+			q.Set("pbk", p.PublicKey)
+		}
+		if p.ShortID != "" {
+			q.Set("sid", p.ShortID)
+		}
+		if p.Network == "ws" && p.WSPath != "" {
+			q.Set("path", p.WSPath)
+		}
+		if p.Network == "ws" && p.SNI != "" {
+			q.Set("host", p.SNI)
+		}
+		return u + "?" + q.Encode() + nameFragment
 	case "trojan":
 		u := fmt.Sprintf("trojan://%s@%s:%d", p.Password, p.Server, p.Port)
-		params := []string{"type=" + p.Network}
+		q := url.Values{}
+		q.Set("type", p.Network)
 		if p.SNI != "" {
-			params = append(params, "sni="+p.SNI)
+			q.Set("sni", p.SNI)
 		}
 		if p.Security != "" {
-			params = append(params, "security="+p.Security)
+			q.Set("security", p.Security)
 		}
-		u += "?" + strings.Join(params, "&")
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + "?" + q.Encode() + nameFragment
 	case "hysteria2", "hy2":
 		u := fmt.Sprintf("hysteria2://%s@%s:%d", p.Password, p.Server, p.Port)
-		params := []string{}
+		q := url.Values{}
 		if p.SNI != "" {
-			params = append(params, "sni="+p.SNI)
+			q.Set("sni", p.SNI)
 		}
-		if len(params) > 0 {
-			u += "?" + strings.Join(params, "&")
+		if p.SkipCertVerify {
+			q.Set("insecure", "1")
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
+		qs := q.Encode()
+		if qs != "" {
+			u += "?" + qs
 		}
-		return u
+		return u + nameFragment
 	case "tuic":
 		u := fmt.Sprintf("tuic://%s@%s:%d", p.UUID, p.Server, p.Port)
-		params := []string{}
+		q := url.Values{}
 		if p.Password != "" {
-			params = append(params, "password="+p.Password)
+			q.Set("password", p.Password)
 		}
 		if p.SNI != "" {
-			params = append(params, "sni="+p.SNI)
+			q.Set("sni", p.SNI)
 		}
-		if len(params) > 0 {
-			u += "?" + strings.Join(params, "&")
+		qs := q.Encode()
+		if qs != "" {
+			u += "?" + qs
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + nameFragment
 	case "socks5":
 		u := fmt.Sprintf("socks5://%s:%d", p.Server, p.Port)
-		if p.Username != "" {
+		if p.Username != "" && p.Password != "" {
 			u = fmt.Sprintf("socks5://%s:%s@%s:%d", p.Username, p.Password, p.Server, p.Port)
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + nameFragment
 	case "http":
 		u := fmt.Sprintf("http://%s:%d", p.Server, p.Port)
-		if p.Username != "" {
+		if p.Username != "" && p.Password != "" {
 			u = fmt.Sprintf("http://%s:%s@%s:%d", p.Username, p.Password, p.Server, p.Port)
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + nameFragment
 	default:
 		return ""
 	}

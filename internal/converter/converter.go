@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -20,7 +21,11 @@ type Engine struct {
 
 // New creates a new Engine with default (basic) template.
 func New() *Engine {
-	tmpl, _ := template.Builtin("basic")
+	tmpl, err := template.Builtin("basic")
+	if err != nil {
+		// Built-in template should always be available; if not, fall back to empty
+		tmpl = &template.Config{}
+	}
 	return &Engine{tmplCfg: tmpl}
 }
 
@@ -30,21 +35,14 @@ func New() *Engine {
 func NewWithTemplate(cfg *template.Config) *Engine {
 	if cfg == nil {
 		tmpl, _ := template.Builtin("basic")
+		if tmpl == nil {
+			tmpl = &template.Config{}
+		}
 		return &Engine{tmplCfg: tmpl}
 	}
 
-	// If a built-in template is referenced but no custom groups/rules, use built-in directly
-	if cfg.Template != "" && template.HasTemplate(cfg.Template) {
-		if len(cfg.ProxyGroups) == 0 && len(cfg.RuleSets) == 0 {
-			builtin, err := template.Builtin(cfg.Template)
-			if err == nil {
-				builtin.RuleProviders = cfg.RuleProviders
-				builtin.ProviderInterval = cfg.ProviderInterval
-				builtin.ProviderProxy = cfg.ProviderProxy
-				return &Engine{tmplCfg: builtin}
-			}
-		}
-		// Merge: load built-in as base, then override with custom
+	// If a built-in template is referenced, load it as base and merge
+	if cfg.Template != "" {
 		base, err := template.Builtin(cfg.Template)
 		if err == nil {
 			if len(cfg.ProxyGroups) > 0 {
@@ -56,6 +54,7 @@ func NewWithTemplate(cfg *template.Config) *Engine {
 			base.RuleProviders = cfg.RuleProviders
 			base.ProviderInterval = cfg.ProviderInterval
 			base.ProviderProxy = cfg.ProviderProxy
+			base.RulePatches = cfg.RulePatches
 			return &Engine{tmplCfg: base}
 		}
 	}
@@ -65,6 +64,9 @@ func NewWithTemplate(cfg *template.Config) *Engine {
 
 // Convert converts a list of proxies to the target format.
 func (e *Engine) Convert(proxies []parser.Proxy, target string) ([]byte, error) {
+	if e.tmplCfg == nil {
+		return nil, fmt.Errorf("engine: template config is nil")
+	}
 	switch target {
 	case "clash":
 		return e.toClash(proxies)
@@ -153,31 +155,34 @@ func (e *Engine) toMixed(proxies []parser.Proxy) ([]byte, error) {
 
 // proxyToURI converts a Proxy back to a subscription URI string.
 func proxyToURI(p parser.Proxy) string {
+	// URL-encode the name fragment to handle spaces and special chars
+	nameFragment := ""
+	if p.Name != "" {
+		nameFragment = "#" + url.PathEscape(p.Name)
+	}
+
 	switch p.Type {
 	case "ss":
-		userInfo := base64.RawStdEncoding.EncodeToString([]byte(p.Cipher + ":" + p.Password))
+		userInfo := base64.RawURLEncoding.EncodeToString([]byte(p.Cipher + ":" + p.Password))
 		uri := fmt.Sprintf("ss://%s@%s:%d", userInfo, p.Server, p.Port)
-		if p.Name != "" {
-			uri += "#" + p.Name
-		}
-		return uri
+		return uri + nameFragment
 	case "ssr":
-		passB64 := base64.RawURLEncoding.EncodeToString([]byte(p.Password))
+		passB64 := base64.URLEncoding.EncodeToString([]byte(p.Password))
 		mainPart := fmt.Sprintf("%s:%d:%s:%s:%s:%s", p.Server, p.Port, p.Protocol, p.Cipher, p.Obfs, passB64)
 		params := ""
 		if p.ObfsParam != "" {
-			params += "&obfsparam=" + base64.RawURLEncoding.EncodeToString([]byte(p.ObfsParam))
+			params += "&obfsparam=" + base64.URLEncoding.EncodeToString([]byte(p.ObfsParam))
 		}
 		if p.ProtocolParam != "" {
-			params += "&protoparam=" + base64.RawURLEncoding.EncodeToString([]byte(p.ProtocolParam))
+			params += "&protoparam=" + base64.URLEncoding.EncodeToString([]byte(p.ProtocolParam))
 		}
 		if p.Name != "" {
-			params += "&remarks=" + base64.RawURLEncoding.EncodeToString([]byte(p.Name))
+			params += "&remarks=" + base64.URLEncoding.EncodeToString([]byte(p.Name))
 		}
 		if params != "" {
 			mainPart += "/?" + strings.TrimPrefix(params, "&")
 		}
-		encoded := base64.RawURLEncoding.EncodeToString([]byte(mainPart))
+		encoded := base64.URLEncoding.EncodeToString([]byte(mainPart))
 		return "ssr://" + encoded
 	case "vmess":
 		vmess := map[string]interface{}{
@@ -189,7 +194,6 @@ func proxyToURI(p parser.Proxy) string {
 			"aid":  "0",
 			"net":  p.Network,
 			"type": "none",
-			"tls":  "",
 		}
 		if p.Network == "ws" && p.WSPath != "" {
 			vmess["path"] = p.WSPath
@@ -203,111 +207,96 @@ func proxyToURI(p parser.Proxy) string {
 		if p.Security == "tls" {
 			vmess["tls"] = "tls"
 		}
-		jsonBytes, _ := json.Marshal(vmess)
+		jsonBytes, err := json.Marshal(vmess)
+		if err != nil {
+			return ""
+		}
 		return "vmess://" + base64.RawURLEncoding.EncodeToString(jsonBytes)
 	case "vless":
 		u := fmt.Sprintf("vless://%s@%s:%d", p.UUID, p.Server, p.Port)
-		params := []string{}
+		q := url.Values{}
 		if p.Encryption == "" {
-			params = append(params, "encryption=none")
+			q.Set("encryption", "none")
 		} else {
-			params = append(params, "encryption="+p.Encryption)
+			q.Set("encryption", p.Encryption)
 		}
-		params = append(params, "type="+p.Network)
+		q.Set("type", p.Network)
 		if p.Security != "" {
-			params = append(params, "security="+p.Security)
+			q.Set("security", p.Security)
 		}
 		if p.SNI != "" {
-			params = append(params, "sni="+p.SNI)
+			q.Set("sni", p.SNI)
 		}
 		if p.Flow != "" {
-			params = append(params, "flow="+p.Flow)
+			q.Set("flow", p.Flow)
 		}
 		if p.Fingerprint != "" {
-			params = append(params, "fp="+p.Fingerprint)
+			q.Set("fp", p.Fingerprint)
 		}
 		if p.PublicKey != "" {
-			params = append(params, "pbk="+p.PublicKey)
+			q.Set("pbk", p.PublicKey)
 		}
 		if p.ShortID != "" {
-			params = append(params, "sid="+p.ShortID)
+			q.Set("sid", p.ShortID)
 		}
 		if p.Network == "ws" && p.WSPath != "" {
-			params = append(params, "path="+p.WSPath)
+			q.Set("path", p.WSPath)
 		}
-		if len(params) > 0 {
-			u += "?" + strings.Join(params, "&")
+		if p.Network == "ws" && p.SNI != "" {
+			q.Set("host", p.SNI)
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + "?" + q.Encode() + nameFragment
 	case "trojan":
 		u := fmt.Sprintf("trojan://%s@%s:%d", p.Password, p.Server, p.Port)
-		params := []string{"type=" + p.Network}
+		q := url.Values{}
+		q.Set("type", p.Network)
 		if p.SNI != "" {
-			params = append(params, "sni="+p.SNI)
+			q.Set("sni", p.SNI)
 		}
 		if p.Security != "" {
-			params = append(params, "security="+p.Security)
+			q.Set("security", p.Security)
 		}
-		if len(params) > 0 {
-			u += "?" + strings.Join(params, "&")
-		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + "?" + q.Encode() + nameFragment
 	case "hysteria2", "hy2":
 		u := fmt.Sprintf("hysteria2://%s@%s:%d", p.Password, p.Server, p.Port)
-		params := []string{}
+		q := url.Values{}
 		if p.SNI != "" {
-			params = append(params, "sni="+p.SNI)
+			q.Set("sni", p.SNI)
 		}
 		if p.SkipCertVerify {
-			params = append(params, "insecure=1")
+			q.Set("insecure", "1")
 		}
-		if len(params) > 0 {
-			u += "?" + strings.Join(params, "&")
+		qs := q.Encode()
+		if qs != "" {
+			u += "?" + qs
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + nameFragment
 	case "tuic":
 		u := fmt.Sprintf("tuic://%s@%s:%d", p.UUID, p.Server, p.Port)
-		params := []string{}
+		q := url.Values{}
 		if p.Password != "" {
-			params = append(params, "password="+p.Password)
+			q.Set("password", p.Password)
 		}
 		if p.SNI != "" {
-			params = append(params, "sni="+p.SNI)
+			q.Set("sni", p.SNI)
 		}
-		if len(params) > 0 {
-			u += "?" + strings.Join(params, "&")
+		qs := q.Encode()
+		if qs != "" {
+			u += "?" + qs
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + nameFragment
 	case "socks5":
 		u := fmt.Sprintf("socks5://%s:%d", p.Server, p.Port)
-		if p.Username != "" {
+		if p.Username != "" && p.Password != "" {
 			u = fmt.Sprintf("socks5://%s:%s@%s:%d", p.Username, p.Password, p.Server, p.Port)
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + nameFragment
 	case "http":
 		u := fmt.Sprintf("http://%s:%d", p.Server, p.Port)
-		if p.Username != "" {
+		if p.Username != "" && p.Password != "" {
 			u = fmt.Sprintf("http://%s:%s@%s:%d", p.Username, p.Password, p.Server, p.Port)
 		}
-		if p.Name != "" {
-			u += "#" + p.Name
-		}
-		return u
+		return u + nameFragment
 	default:
 		return ""
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -245,7 +246,18 @@ func runConvert(cmd *cobra.Command, args []string) error {
 	// Preload config if file exists (for template settings even in inline mode)
 	var cfg *config.Config
 	if _, err := os.Stat(cfgFile); err == nil {
-		cfg, _ = config.Load(cfgFile)
+		loaded, err := config.Load(cfgFile)
+		if err != nil {
+			log.Printf("warning: config file %q exists but could not be parsed: %v", cfgFile, err)
+		} else {
+			cfg = loaded
+		}
+	}
+
+	// Resolve profile
+	profileName, _ := cmd.Flags().GetString("profile")
+	if cfg != nil {
+		cfg = cfg.Resolve(profileName)
 	}
 
 	if len(args) > 0 {
@@ -271,6 +283,40 @@ func runConvert(cmd *cobra.Command, args []string) error {
 				}
 				proxies = append(proxies, parsed...)
 			}
+		}
+
+		// Apply rules from config in inline mode too
+		if cfg != nil && (len(cfg.Rules.Include) > 0 || len(cfg.Rules.Exclude) > 0) {
+			var ruleProxies []rule.Proxy
+			for _, p := range proxies {
+				ruleProxies = append(ruleProxies, rule.FromName(p.Name))
+			}
+			var rules []rule.Rule
+			for _, inc := range cfg.Rules.Include {
+				rules = append(rules, rule.Rule{Action: rule.ActionInclude, Pattern: inc})
+			}
+			for _, exc := range cfg.Rules.Exclude {
+				rules = append(rules, rule.Rule{Action: rule.ActionExclude, Pattern: exc})
+			}
+			engine := rule.New(rules)
+			filtered := engine.Apply(ruleProxies)
+
+			// Map back — handle duplicate names
+			nameCounter := make(map[string]int)
+			for _, rp := range filtered {
+				nameCounter[rp.Name]++
+			}
+			consumed := make(map[string]int)
+			var filteredProxies parser.ProxyList
+			for _, p := range proxies {
+				if nameCounter[p.Name] > 0 {
+					if consumed[p.Name] < nameCounter[p.Name] {
+						consumed[p.Name]++
+						filteredProxies = append(filteredProxies, p)
+					}
+				}
+			}
+			proxies = filteredProxies
 		}
 	} else {
 		// Config mode
@@ -314,15 +360,19 @@ func runConvert(cmd *cobra.Command, args []string) error {
 			engine := rule.New(rules)
 			filtered := engine.Apply(ruleProxies)
 
-			// Map back
-			nameSet := make(map[string]bool)
+			// Map back — handle duplicate names by consuming matched entries
+			nameCounter := make(map[string]int)
 			for _, rp := range filtered {
-				nameSet[rp.Name] = true
+				nameCounter[rp.Name]++
 			}
+			consumed := make(map[string]int)
 			var filteredProxies parser.ProxyList
 			for _, p := range proxies {
-				if nameSet[p.Name] {
-					filteredProxies = append(filteredProxies, p)
+				if nameCounter[p.Name] > 0 {
+					if consumed[p.Name] < nameCounter[p.Name] {
+						consumed[p.Name]++
+						filteredProxies = append(filteredProxies, p)
+					}
 				}
 			}
 			proxies = filteredProxies
@@ -348,9 +398,11 @@ func runConvert(cmd *cobra.Command, args []string) error {
 		if err := os.WriteFile(outputFile, data, 0644); err != nil {
 			return fmt.Errorf("write output: %w", err)
 		}
-		fmt.Fprintf(os.Stderr, "Written %d bytes to %s (%d proxies)\n", len(data), outputFile, len(proxies))
+		fmt.Printf("Written %d bytes to %s (%d proxies)\n", len(data), outputFile, len(proxies))
 	} else {
-		os.Stdout.Write(data)
+		if _, err := os.Stdout.Write(data); err != nil {
+			return fmt.Errorf("write stdout: %w", err)
+		}
 	}
 
 	return nil
@@ -398,7 +450,10 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	if cfgTmpl.Template != "" || len(cfgTmpl.ProxyGroups) > 0 {
 		// If using a built-in template with no custom proxy-groups, load the built-in
 		if cfgTmpl.Template != "" && template.HasTemplate(cfgTmpl.Template) && len(cfgTmpl.ProxyGroups) == 0 {
-			if builtin, err := template.Builtin(cfgTmpl.Template); err == nil {
+			builtin, err := template.Builtin(cfgTmpl.Template)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("load template %q: %w", cfgTmpl.Template, err))
+			} else {
 				cfgTmpl.ProxyGroups = builtin.ProxyGroups
 			}
 		}
@@ -530,7 +585,11 @@ func runLogin(cmd *cobra.Command, args []string) error {
 	// Save to config
 	cfg, err := config.Load(cfgFile)
 	if err != nil {
-		cfg = config.DefaultConfig()
+		if errors.Is(err, os.ErrNotExist) {
+			cfg = config.DefaultConfig()
+		} else {
+			return fmt.Errorf("load config: %w", err)
+		}
 	}
 
 	// Update or add source
@@ -617,7 +676,11 @@ func newSourceCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load(cfgFile)
 			if err != nil {
-				cfg = config.DefaultConfig()
+				if errors.Is(err, os.ErrNotExist) {
+					cfg = config.DefaultConfig()
+				} else {
+					return fmt.Errorf("load config: %w", err)
+				}
 			}
 			cookie, _ := cmd.Flags().GetString("cookie")
 			ua, _ := cmd.Flags().GetString("user-agent")
@@ -1270,7 +1333,11 @@ Examples:
 
 			cfg, err := config.Load(cfgFile)
 			if err != nil {
-				cfg = config.DefaultConfig()
+				if errors.Is(err, os.ErrNotExist) {
+					cfg = config.DefaultConfig()
+				} else {
+					return fmt.Errorf("load config: %w", err)
+				}
 			}
 
 			// Check for duplicates

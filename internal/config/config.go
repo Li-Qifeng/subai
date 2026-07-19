@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/user/subai/internal/template"
 	"gopkg.in/yaml.v3"
@@ -54,10 +55,10 @@ type Rules struct {
 
 // Output defines the output target configuration.
 type Output struct {
-	Target string `yaml:"target"`          // clash, base64, singbox, mixed
-	Path   string `yaml:"path,omitempty"`  // output file path
-	Pretty bool   `yaml:"pretty"`          // pretty-print output
-	Template template.Config `yaml:",inline"` // template config (merged inline)
+	Target   string           `yaml:"target"`             // clash, base64, singbox, mixed
+	Path     string           `yaml:"path,omitempty"`     // output file path
+	Pretty   bool             `yaml:"pretty"`             // pretty-print output
+	Template template.Config  `yaml:",inline"`            // template config (merged inline)
 }
 
 // Server defines the optional HTTP server configuration.
@@ -66,6 +67,8 @@ type Server struct {
 	Listen  string `yaml:"listen"` // e.g. ":8080"
 	Token   string `yaml:"token,omitempty"`
 }
+
+var validTargets = map[string]bool{"clash": true, "base64": true, "singbox": true, "mixed": true}
 
 // Load reads and parses a YAML config file.
 func Load(path string) (*Config, error) {
@@ -77,20 +80,35 @@ func Load(path string) (*Config, error) {
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
+	if errs := cfg.Validate(); len(errs) > 0 {
+		return nil, fmt.Errorf("invalid config: %v", errs)
+	}
 	return &cfg, nil
 }
 
-// Save writes the config to a YAML file.
+// Save writes the config to a YAML file atomically (write to temp, then rename).
 func (c *Config) Save(path string) error {
+	if c == nil {
+		return fmt.Errorf("config is nil")
+	}
 	data, err := yaml.Marshal(c)
 	if err != nil {
 		return fmt.Errorf("marshal config: %w", err)
 	}
-	return os.WriteFile(path, data, 0644)
+	// Write to temp file first, then rename for atomicity
+	dir := filepath.Dir(path)
+	tmpPath := filepath.Join(dir, "."+filepath.Base(path)+".tmp")
+	if err := os.WriteFile(tmpPath, data, 0644); err != nil {
+		return fmt.Errorf("write temp: %w", err)
+	}
+	return os.Rename(tmpPath, path)
 }
 
 // Validate checks config for common errors.
 func (c *Config) Validate() []error {
+	if c == nil {
+		return []error{fmt.Errorf("config is nil")}
+	}
 	var errs []error
 	for i, s := range c.Sources {
 		if s.Name == "" {
@@ -99,9 +117,20 @@ func (c *Config) Validate() []error {
 		if s.URL == "" {
 			errs = append(errs, fmt.Errorf("source[%d]: url is required", i))
 		}
+		if s.Login != nil {
+			errs = append(errs, validateLogin(s.Login, fmt.Sprintf("source[%d].login", i))...)
+		}
 	}
 	if c.Output.Target == "" {
 		errs = append(errs, fmt.Errorf("output.target is required (clash, base64, singbox, mixed)"))
+	} else if !validTargets[c.Output.Target] {
+		errs = append(errs, fmt.Errorf("output.target: %q is not valid (must be clash, base64, singbox, or mixed)", c.Output.Target))
+	}
+	// Validate CurrentProfile
+	if c.CurrentProfile != "" && c.Profiles != nil {
+		if _, ok := c.Profiles[c.CurrentProfile]; !ok {
+			errs = append(errs, fmt.Errorf("current_profile %q not found in profiles", c.CurrentProfile))
+		}
 	}
 	// Validate profiles
 	for name, p := range c.Profiles {
@@ -112,7 +141,38 @@ func (c *Config) Validate() []error {
 			if s.URL == "" {
 				errs = append(errs, fmt.Errorf("profile[%s].sources[%d]: url is required", name, i))
 			}
+			if s.Login != nil {
+				errs = append(errs, validateLogin(s.Login, fmt.Sprintf("profile[%s].sources[%d].login", name, i))...)
+			}
 		}
+		if p.Output != nil {
+			if p.Output.Target != "" && !validTargets[p.Output.Target] {
+				errs = append(errs, fmt.Errorf("profile[%s].output.target: %q is not valid", name, p.Output.Target))
+			}
+		}
+	}
+	// Validate server
+	if c.Server.Enabled && c.Server.Listen == "" {
+		errs = append(errs, fmt.Errorf("server.listen is required when server.enabled is true"))
+	}
+	return errs
+}
+
+func validateLogin(l *Login, prefix string) []error {
+	var errs []error
+	if l.Method == "" {
+		errs = append(errs, fmt.Errorf("%s.method is required", prefix))
+	} else if l.Method != "v2board" {
+		errs = append(errs, fmt.Errorf("%s.method: %q is not supported (only v2board)", prefix, l.Method))
+	}
+	if l.URL == "" {
+		errs = append(errs, fmt.Errorf("%s.url is required", prefix))
+	}
+	if l.Email == "" {
+		errs = append(errs, fmt.Errorf("%s.email is required", prefix))
+	}
+	if l.Password == "" {
+		errs = append(errs, fmt.Errorf("%s.password is required", prefix))
 	}
 	return errs
 }
@@ -121,6 +181,9 @@ func (c *Config) Validate() []error {
 // If profileName is empty, uses CurrentProfile. Falls back to root config
 // when the profile is not found or has no profile system.
 func (c *Config) Resolve(profileName string) *Config {
+	if c == nil {
+		return nil
+	}
 	if profileName == "" {
 		profileName = c.CurrentProfile
 	}
@@ -132,16 +195,43 @@ func (c *Config) Resolve(profileName string) *Config {
 		return c // unknown profile, return root
 	}
 
-	// Shallow copy, then override
+	// Deep copy: shallow copy struct, then deep-copy slices
 	resolved := *c
+	// Deep-copy sources (to avoid sharing backing array)
 	if len(p.Sources) > 0 {
 		resolved.Sources = p.Sources
+	} else if c.Sources != nil {
+		resolved.Sources = make([]Source, len(c.Sources))
+		copy(resolved.Sources, c.Sources)
 	}
+	// Override rules
 	if p.Rules != nil {
 		resolved.Rules = *p.Rules
 	}
+	// Override output — merge template config to preserve root template settings
 	if p.Output != nil {
-		resolved.Output = *p.Output
+		merged := resolved.Output
+		if p.Output.Target != "" {
+			merged.Target = p.Output.Target
+		}
+		if p.Output.Path != "" {
+			merged.Path = p.Output.Path
+		}
+		merged.Pretty = p.Output.Pretty
+		// Merge template fields: only override if profile explicitly sets them
+		if p.Output.Template.Template != "" {
+			merged.Template.Template = p.Output.Template.Template
+		}
+		if len(p.Output.Template.ProxyGroups) > 0 {
+			merged.Template.ProxyGroups = p.Output.Template.ProxyGroups
+		}
+		if len(p.Output.Template.RuleSets) > 0 {
+			merged.Template.RuleSets = p.Output.Template.RuleSets
+		}
+		if len(p.Output.Template.RulePatches) > 0 {
+			merged.Template.RulePatches = p.Output.Template.RulePatches
+		}
+		resolved.Output = merged
 	}
 	return &resolved
 }
@@ -152,6 +242,9 @@ func DefaultConfig() *Config {
 		Output: Output{
 			Target: "clash",
 			Pretty: true,
+			Template: template.Config{
+				Template: "basic",
+			},
 		},
 	}
 }
