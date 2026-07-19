@@ -307,6 +307,14 @@ func buildRuleLine(rs RuleSet) string {
 		return fmt.Sprintf("RULE-SET,%s,%s", rs.URL, rs.Group)
 	}
 	if rs.BuiltIn != "" {
+		// Built-in references: geosite:xxx → GEOSITE,xxx,group
+		//                         geoip:xxx   → GEOIP,xxx,group
+		if strings.HasPrefix(rs.BuiltIn, "geosite:") {
+			return fmt.Sprintf("GEOSITE,%s,%s", strings.TrimPrefix(rs.BuiltIn, "geosite:"), rs.Group)
+		}
+		if strings.HasPrefix(rs.BuiltIn, "geoip:") {
+			return fmt.Sprintf("GEOIP,%s,%s", strings.TrimPrefix(rs.BuiltIn, "geoip:"), rs.Group)
+		}
 		return fmt.Sprintf("RULE-SET,%s,%s", rs.BuiltIn, rs.Group)
 	}
 	if rs.Rule != "" {
