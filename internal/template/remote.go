@@ -82,7 +82,7 @@ func syncIndex(remoteURL string, dir string) ([]TemplateIndexEntry, error) {
 	return index, nil
 }
 
-// SyncTemplates fetches the latest Aethersailor INI templates and converts them to YAML.
+// SyncTemplates fetches the latest Aethersailor/ACL4SSR INI templates and converts them to YAML.
 func SyncTemplates(remoteURL string) error {
 	if remoteURL == "" {
 		remoteURL = DefaultRemoteURL
@@ -93,22 +93,25 @@ func SyncTemplates(remoteURL string) error {
 		return err
 	}
 
-	fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  📥 Syncing templates from %s ...\n", remoteURL)
+	fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  📥 Syncing templates ...\n")
 
-	// Aethersailor INI templates to sync
+	// Template sources: name → (repo URL, INI file, description)
 	templates := []struct {
 		Name string
+		Repo string
 		File string
 		Desc string
 	}{
-		{Name: "aethersailor_full", File: "Custom_Clash_Full.ini", Desc: "Aethersailor 全分组防 DNS 泄漏模板 (50 策略组)"},
-		{Name: "aethersailor_lite", File: "Custom_Clash_Lite.ini", Desc: "Aethersailor 轻量分组模板 (19 策略组)"},
-		{Name: "aethersailor_gfw", File: "Custom_Clash_GFW.ini", Desc: "Aethersailor GFW 模式模板"},
+		{Name: "aethersailor_full", Repo: "https://raw.githubusercontent.com/Aethersailor/Custom_OpenClash_Rules/main/cfg", File: "Custom_Clash_Full.ini", Desc: "Aethersailor 全分组防 DNS 泄漏模板 (50 策略组)"},
+		{Name: "aethersailor_lite", Repo: "https://raw.githubusercontent.com/Aethersailor/Custom_OpenClash_Rules/main/cfg", File: "Custom_Clash_Lite.ini", Desc: "Aethersailor 轻量分组模板 (19 策略组)"},
+		{Name: "aethersailor_gfw", Repo: "https://raw.githubusercontent.com/Aethersailor/Custom_OpenClash_Rules/main/cfg", File: "Custom_Clash_GFW.ini", Desc: "Aethersailor GFW 模式模板"},
+		{Name: "acl4ssr_full", Repo: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config", File: "ACL4SSR_Online_Full.ini", Desc: "ACL4SSR 全分组模板 (完整规则)"},
+		{Name: "acl4ssr_lite", Repo: "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config", File: "ACL4SSR_Online.ini", Desc: "ACL4SSR 在线精简模板"},
 	}
 
 	downloaded := 0
 	for _, t := range templates {
-		fileURL := remoteURL + "/" + t.File
+		fileURL := t.Repo + "/" + t.File
 		body, err := getWithTimeout(fileURL)
 		if err != nil {
 			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: %v\n", t.Name, err)

@@ -89,6 +89,10 @@ func parseRuleSet(line string) (*RuleSet, error) {
 		rs.BuiltIn = "geoip:" + ruleValue
 	case strings.HasPrefix(ruleType, "[]FINAL"):
 		rs.Rule = "MATCH"
+	case strings.HasPrefix(ruleType, "https://") || strings.HasPrefix(ruleType, "http://"):
+		// Raw URL (ACL4SSR format)
+		rs.URL = ruleType
+		// ruleValue might be a comma-separated interval, ignore
 	case strings.HasPrefix(ruleType, "clash-domain:"):
 		rs.URL = strings.TrimPrefix(ruleType, "clash-domain:")
 	case strings.HasPrefix(ruleType, "clash-classic:"):
