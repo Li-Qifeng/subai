@@ -34,6 +34,59 @@ type Server struct {
 	webhookURLs     []string
 	outputPath      string
 	stopCh          chan struct{}
+
+	// sourceCache stores the last successful proxies per source name,
+	// so a failed fetch can fall back to the previous result.
+	sourceCache map[string]parser.ProxyList
+	cacheMu     sync.RWMutex
+}
+
+// getCachedProxies returns cached proxies for a source, or nil.
+func (s *Server) getCachedProxies(name string) parser.ProxyList {
+	s.cacheMu.RLock()
+	defer s.cacheMu.RUnlock()
+	if s.sourceCache == nil {
+		return nil
+	}
+	return s.sourceCache[name]
+}
+
+// setCachedProxies stores the last successful proxies for a source.
+func (s *Server) setCachedProxies(name string, proxies parser.ProxyList) {
+	s.cacheMu.Lock()
+	defer s.cacheMu.Unlock()
+	if s.sourceCache == nil {
+		s.sourceCache = make(map[string]parser.ProxyList)
+	}
+	// Make a copy so the caller can still mutate the slice
+	cpy := make(parser.ProxyList, len(proxies))
+	copy(cpy, proxies)
+	s.sourceCache[name] = cpy
+}
+
+// fetchWithFallback fetches a source, falling back to cache on error.
+// Returns the proxies and whether they came from cache (stale).
+func (s *Server) fetchWithFallback(src config.Source) (proxies parser.ProxyList, stale bool) {
+	body, err := fetcher.Fetch(src.URL, src.Cookie, src.UserAgent)
+	if err != nil {
+		log.Printf("fetch source %q: %v", src.Name, err)
+		if cached := s.getCachedProxies(src.Name); len(cached) > 0 {
+			log.Printf("  using cached %d proxies for %q", len(cached), src.Name)
+			return cached, true
+		}
+		return nil, false
+	}
+	proxies, err = parser.ParseAuto(body)
+	if err != nil {
+		log.Printf("parse source %q: %v", src.Name, err)
+		if cached := s.getCachedProxies(src.Name); len(cached) > 0 {
+			log.Printf("  using cached %d proxies for %q", len(cached), src.Name)
+			return cached, true
+		}
+		return nil, false
+	}
+	s.setCachedProxies(src.Name, proxies)
+	return proxies, false
 }
 
 // New creates a new Server with the given settings.
@@ -117,18 +170,15 @@ func (s *Server) refreshAndNotify() {
 	}
 	cfg = cfg.Resolve("") // use current profile
 
-	// Fetch and parse all sources
+	// Fetch and parse all sources with cache fallback
 	var allProxies parser.ProxyList
 	for _, src := range cfg.Sources {
-		body, err := fetcher.Fetch(src.URL, src.Cookie, src.UserAgent)
-		if err != nil {
-			log.Printf("auto-refresh: fetch source %q: %v", src.Name, err)
+		proxies, stale := s.fetchWithFallback(src)
+		if len(proxies) == 0 {
 			continue
 		}
-		proxies, err := parser.ParseAuto(body)
-		if err != nil {
-			log.Printf("auto-refresh: parse source %q: %v", src.Name, err)
-			continue
+		if stale {
+			log.Printf("  ⚠️  source %q: using stale cache (%d proxies)", src.Name, len(proxies))
 		}
 		allProxies = append(allProxies, proxies...)
 	}
@@ -266,19 +316,15 @@ func (s *Server) handleSub(w http.ResponseWriter, r *http.Request) {
 	profileName := r.URL.Query().Get("profile")
 	cfg = cfg.Resolve(profileName)
 
-	// 2. Fetch and parse each source
+	// 2. Fetch and parse each source with cache fallback
 	var allProxies parser.ProxyList
 	for _, src := range cfg.Sources {
-		body, err := fetcher.Fetch(src.URL, src.Cookie, src.UserAgent)
-		if err != nil {
-			log.Printf("sub: fetch source %q: %v", src.Name, err)
-			continue // skip failing sources
-		}
-
-		proxies, err := parser.ParseAuto(body)
-		if err != nil {
-			log.Printf("sub: parse source %q: %v", src.Name, err)
+		proxies, stale := s.fetchWithFallback(src)
+		if len(proxies) == 0 {
 			continue
+		}
+		if stale {
+			log.Printf("  ⚠️  source %q: using stale cache (%d proxies)", src.Name, len(proxies))
 		}
 		allProxies = append(allProxies, proxies...)
 	}
