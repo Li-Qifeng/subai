@@ -1,6 +1,7 @@
-2026/07/20 00:52:17 subai server listening on :8088
-2026/07/20 00:52:17   auto-refresh: every 6h0m0s
-2026/07/20 00:52:17   webhooks: 1 configured
-2026/07/20 00:52:17   output: /root/subai/output/clash.yaml
-2026/07/20 00:52:33 parse source "kitty": unable to detect input format
-2026/07/20 00:52:39 parse source "xfltd": unable to detect input format
+2026/07/20 00:56:15 subai server listening on :8088
+2026/07/20 00:56:15   auto-refresh: every 6h0m0s
+2026/07/20 00:56:15   webhooks: 1 configured
+2026/07/20 00:56:15   output: /root/subai/output/clash.yaml
+2026/07/20 00:56:24 parse source "kitty": unable to detect input format
+2026/07/20 00:57:19 parse source "kitty": unable to detect input format
+2026/07/20 00:59:44 parse source "kitty": unable to detect input format
