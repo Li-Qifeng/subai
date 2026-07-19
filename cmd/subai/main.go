@@ -331,11 +331,35 @@ func runConvert(cmd *cobra.Command, args []string) error {
 		profileName, _ := cmd.Flags().GetString("profile")
 		cfg = cfg.Resolve(profileName)
 
+		// Set up persistent cache in output directory if available
+		var cache *fetcher.PersistentCache
+		if outputFile != "" {
+			cacheDir := filepath.Dir(outputFile)
+			if cacheDir != "" {
+				cache = fetcher.NewPersistentCache(cacheDir)
+			}
+		}
+
 		for _, src := range cfg.Sources {
 			body, err := fetcher.Fetch(src.URL, src.Cookie, src.UserAgent)
 			if err != nil {
+				// Try persistent cache fallback
+				if cache != nil {
+					if cached := cache.Get(src.Name); len(cached) > 0 {
+						parsed, parseErr := parser.ParseAuto(cached)
+						if parseErr == nil {
+							log.Printf("  using cached %d proxies for %q (fetch failed: %v)", len(parsed), src.Name, err)
+							proxies = append(proxies, parsed...)
+							continue
+						}
+					}
+				}
 				log.Printf("fetch source %q: %v", src.Name, err)
 				continue
+			}
+			// Cache the raw fetch result for future use
+			if cache != nil {
+				cache.Set(src.Name, body)
 			}
 			parsed, err := parser.ParseAuto(body)
 			if err != nil {

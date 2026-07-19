@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -121,6 +124,58 @@ func (s *Session) UpdateCookie(cookie string) {
 // setClient sets a custom HTTP client (used for testing with httptest).
 func (s *Session) setClient(client *http.Client) {
 	s.client = client
+}
+
+// PersistentCache is a disk-based cache for subscription fetch results.
+// It survives process restarts, so stale nodes are preserved when a source
+// is temporarily unreachable.
+type PersistentCache struct {
+	dir string
+}
+
+// NewPersistentCache creates a cache in the given directory.
+func NewPersistentCache(dir string) *PersistentCache {
+	return &PersistentCache{dir: dir}
+}
+
+// Get returns cached data for a source name, or nil if not cached.
+func (c *PersistentCache) Get(name string) []byte {
+	if c == nil || c.dir == "" {
+		return nil
+	}
+	path := filepath.Join(c.dir, ".cache_"+name+".raw")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	return data
+}
+
+// Set caches data for a source name.
+func (c *PersistentCache) Set(name string, data []byte) {
+	if c == nil || c.dir == "" {
+		return
+	}
+	path := filepath.Join(c.dir, ".cache_"+name+".raw")
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		log.Printf("cache: write %q: %v", name, err)
+	}
+}
+
+// FetchWithCache fetches a URL, falling back to persistent cache on failure.
+// If the fetch succeeds, the result is cached for future use.
+func (c *PersistentCache) FetchWithCache(name, url, cookie, userAgent string) ([]byte, error) {
+	body, err := Fetch(url, cookie, userAgent)
+	if err == nil {
+		// Success: cache and return
+		c.Set(name, body)
+		return body, nil
+	}
+	// Fetch failed: try cache
+	if cached := c.Get(name); len(cached) > 0 {
+		return cached, nil
+	}
+	return nil, err
 }
 
 // FetchRaw is like Fetch but returns the raw HTTP response body and status code.
