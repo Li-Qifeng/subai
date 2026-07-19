@@ -4,7 +4,7 @@ sources:
     - name: qzz
       url: https://234.qzz.io/fsllist64
     - name: xfltd
-      url: https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjIwMDM4MWUxNDdiNGMyNzcwNWMwZjkzNWU1NTBlOGFjY2RhYmExYjY
+      url: https://api2.xfltd.click/cctv/user/client/get?token=MzMxODU5OmE3NzljZjc2YmY5NTc2ZGQ3OWI4YTIzOTkyZDY3OWExMDY4ZDI5OTQ
       user-agent: Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15
       login:
         method: v2board
@@ -18,4 +18,3 @@ output:
     template: acl4ssr_online_full_multimode
     fetch_rules: false
     rule_providers: true
-    rule_sets: []
