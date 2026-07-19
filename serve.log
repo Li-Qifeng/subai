@@ -1,14 +1,10 @@
-2026/07/19 23:50:51 subai server listening on :8088
-2026/07/19 23:50:51   auto-refresh: every 6h0m0s
-2026/07/19 23:50:51   webhooks: 1 configured
-2026/07/19 23:50:51   output: /root/subai/output/clash.yaml
-2026/07/19 23:51:24 parse source "kitty": unable to detect input format
-2026/07/19 23:51:30 parse source "xfltd": unable to detect input format
-2026/07/19 23:58:26 parse source "kitty": unable to detect input format
-2026/07/19 23:58:26 parse source "kitty": unable to detect input format
-2026/07/19 23:58:28 parse source "kitty": unable to detect input format
-2026/07/19 23:58:29 parse source "kitty": unable to detect input format
-2026/07/19 23:58:31 parse source "xfltd": unable to detect input format
-2026/07/19 23:58:31 parse source "xfltd": unable to detect input format
-2026/07/19 23:58:32 parse source "xfltd": unable to detect input format
-2026/07/19 23:58:33 parse source "xfltd": unable to detect input format
+2026/07/20 00:05:30 subai server listening on :8088
+2026/07/20 00:05:30   auto-refresh: every 6h0m0s
+2026/07/20 00:05:30   webhooks: 1 configured
+2026/07/20 00:05:30   output: /root/subai/output/clash.yaml
+2026/07/20 00:06:09 parse source "kitty": unable to detect input format
+2026/07/20 00:06:15 fetch source "xfltd": cloudscraper: exit status 1
+2026/07/20 00:28:23 parse source "kitty": unable to detect input format
+2026/07/20 00:28:27 parse source "xfltd": unable to detect input format
+2026/07/20 00:29:20 parse source "kitty": unable to detect input format
+2026/07/20 00:29:23 parse source "xfltd": unable to detect input format

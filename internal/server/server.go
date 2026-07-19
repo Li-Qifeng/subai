@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -43,29 +44,84 @@ type Server struct {
 	// so a failed fetch can fall back to the previous result.
 	sourceCache map[string]parser.ProxyList
 	cacheMu     sync.RWMutex
+	// diskCacheDir is the directory for persistent cache files.
+	diskCacheDir string
 }
 
 // getCachedProxies returns cached proxies for a source, or nil.
+// Falls back to disk cache if in-memory cache is empty.
 func (s *Server) getCachedProxies(name string) parser.ProxyList {
 	s.cacheMu.RLock()
-	defer s.cacheMu.RUnlock()
-	if s.sourceCache == nil {
-		return nil
+	cached := s.sourceCache[name]
+	s.cacheMu.RUnlock()
+	if len(cached) > 0 {
+		return cached
 	}
-	return s.sourceCache[name]
+	// Fall back to disk cache
+	return s.loadDiskCache(name)
 }
 
 // setCachedProxies stores the last successful proxies for a source.
+// Also persists to disk for survival across restarts.
 func (s *Server) setCachedProxies(name string, proxies parser.ProxyList) {
-	s.cacheMu.Lock()
-	defer s.cacheMu.Unlock()
-	if s.sourceCache == nil {
-		s.sourceCache = make(map[string]parser.ProxyList)
-	}
 	// Make a copy so the caller can still mutate the slice
 	cpy := make(parser.ProxyList, len(proxies))
 	copy(cpy, proxies)
+
+	s.cacheMu.Lock()
+	if s.sourceCache == nil {
+		s.sourceCache = make(map[string]parser.ProxyList)
+	}
 	s.sourceCache[name] = cpy
+	s.cacheMu.Unlock()
+
+	// Persist to disk
+	s.saveDiskCache(name, cpy)
+}
+
+// cachePath returns the disk cache file path for a source.
+func (s *Server) cachePath(name string) string {
+	if s.diskCacheDir == "" {
+		return ""
+	}
+	return filepath.Join(s.diskCacheDir, ".cache_"+name+".json")
+}
+
+// saveDiskCache persists proxies to disk so they survive restarts.
+func (s *Server) saveDiskCache(name string, proxies parser.ProxyList) {
+	path := s.cachePath(name)
+	if path == "" {
+		return
+	}
+	data, err := json.Marshal(proxies)
+	if err != nil {
+		log.Printf("cache: marshal %q: %v", name, err)
+		return
+	}
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		log.Printf("cache: write %q: %v", name, err)
+	}
+}
+
+// loadDiskCache loads proxies from disk cache.
+func (s *Server) loadDiskCache(name string) parser.ProxyList {
+	path := s.cachePath(name)
+	if path == "" {
+		return nil
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil // file doesn't exist or can't read
+	}
+	var proxies parser.ProxyList
+	if err := json.Unmarshal(data, &proxies); err != nil {
+		log.Printf("cache: unmarshal %q: %v", name, err)
+		return nil
+	}
+	if len(proxies) > 0 {
+		log.Printf("  loaded %d cached proxies for %q from disk", len(proxies), name)
+	}
+	return proxies
 }
 
 // fetchWithFallback fetches a source, falling back to cache on error.
@@ -109,6 +165,10 @@ func (s *Server) WithAutoRefresh(interval time.Duration, webhookURLs []string, o
 	s.refreshInterval = interval
 	s.webhookURLs = webhookURLs
 	s.outputPath = outputPath
+	// Use output directory for disk cache if provided
+	if outputPath != "" {
+		s.diskCacheDir = filepath.Dir(outputPath)
+	}
 	return s
 }
 
