@@ -89,6 +89,40 @@ except Exception as e:
 	return output, nil
 }
 
+// Session is a simple fetch session with cookie and user-agent tracking.
+// Used by the login flow to maintain state across multiple requests.
+type Session struct {
+	URL       string
+	Cookie    string
+	UserAgent string
+	client    *http.Client
+}
+
+// NewSession creates a new fetch session.
+func NewSession(url, cookie, userAgent string) *Session {
+	return &Session{
+		URL:       url,
+		Cookie:    cookie,
+		UserAgent: userAgent,
+		client:    &http.Client{Timeout: 30 * time.Second},
+	}
+}
+
+// Fetch makes a request with the session's cookie and user-agent.
+func (s *Session) Fetch() ([]byte, error) {
+	return Fetch(s.URL, s.Cookie, s.UserAgent)
+}
+
+// UpdateCookie updates the session's cookie.
+func (s *Session) UpdateCookie(cookie string) {
+	s.Cookie = cookie
+}
+
+// setClient sets a custom HTTP client (used for testing with httptest).
+func (s *Session) setClient(client *http.Client) {
+	s.client = client
+}
+
 // FetchRaw is like Fetch but returns the raw HTTP response body and status code.
 // Used by the login flow to inspect the response.
 func FetchRaw(url, cookie, userAgent string) ([]byte, int, error) {
