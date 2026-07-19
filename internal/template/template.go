@@ -352,19 +352,24 @@ func enrichProxyGroups(result *BuildResult, allNames []string) {
 			continue
 		}
 		// Skip top-level groups
-		if name == "🚀 手动选择" || name == "🎯 全球直连" || name == "🔀 非标端口" {
+		if name == "🚀 手动选择" || name == "🎯 全球直连" {
 			continue
 		}
 		members, _ := g["proxies"].([]string)
 		if len(members) <= 1 {
-			// Build enriched member list: original members + 自动选择 + region groups
+			// Build enriched member list: original members + 手动选择 + 自动选择 + region groups
 			seen := make(map[string]bool)
-			enriched := make([]string, 0, len(members)+len(allRegionNames)+1)
+			enriched := make([]string, 0, len(members)+len(allRegionNames)+2)
 			for _, m := range members {
 				if !seen[m] {
 					enriched = append(enriched, m)
 					seen[m] = true
 				}
+			}
+			// Add 🚀 手动选择 if not already present
+			if !seen["🚀 手动选择"] {
+				enriched = append(enriched, "🚀 手动选择")
+				seen["🚀 手动选择"] = true
 			}
 			// Add ♻️ 自动选择 if not already present
 			if !seen["♻️ 自动选择"] {

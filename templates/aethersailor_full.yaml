@@ -150,6 +150,7 @@ proxy_groups:
   type: select
   proxies:
   - 🐟 漏网之鱼
+  - 🎯 全球直连
 - name: 🇭🇰 香港节点
   type: url-test
   filter: (🇭🇰|港|\bHK(?:[-_ ]?\d+(?:[-_ ]?[A-Za-z]{2,})?)?\b|hk|Hong Kong|HongKong|hongkong|HONG
