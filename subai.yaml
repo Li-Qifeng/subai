@@ -4,7 +4,7 @@ sources:
     - name: qzz
       url: https://234.qzz.io/fsllist64
     - name: xfltd
-      url: https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk
+      url: https://api2.xfltd.click/cctv/user/client/get?token=MzMxODU5OmE2ZmJiYTYwMDliNjNkYzcyYTU3NzljMGNhMmZhNzZkZjFkY2FlNWM
       user-agent: Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15
       login:
         method: v2board

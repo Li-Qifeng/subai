@@ -1,9 +1,21 @@
-2026/07/19 19:52:45 subai server listening on :8088
-2026/07/19 19:52:45   auto-refresh: every 6h0m0s
-2026/07/19 19:52:45   webhooks: 1 configured
-2026/07/19 19:52:45   output: /root/subai/output/clash.yaml
-2026/07/19 19:55:21 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: HTTP 403
-2026/07/19 20:35:22 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: HTTP 403
-2026/07/19 20:38:47 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: Get "https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk": EOF
-2026/07/19 20:42:21 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: HTTP 403
-2026/07/19 20:45:24 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: HTTP 403
+2026/07/19 20:50:49 subai server listening on :8088
+2026/07/19 20:50:49   auto-refresh: every 6h0m0s
+2026/07/19 20:50:49   webhooks: 1 configured
+2026/07/19 20:50:49   output: /root/subai/output/clash.yaml
+2026/07/19 20:51:34 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: Get "https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk": EOF
+2026/07/19 22:20:45 fetch source "kitty": fetch https://kaze1.aisaka-taiga.com/oosaka/a56e90805fd667daa53bfa6c0143d4bf: HTTP 403
+2026/07/19 22:20:45   using cached 35 proxies for "kitty"
+2026/07/19 22:20:45   ⚠️  source "kitty": using stale cache (35 proxies)
+2026/07/19 22:20:47 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: HTTP 403
+2026/07/19 22:23:14 fetch source "kitty": fetch https://kaze1.aisaka-taiga.com/oosaka/a56e90805fd667daa53bfa6c0143d4bf: HTTP 403
+2026/07/19 22:23:14   using cached 35 proxies for "kitty"
+2026/07/19 22:23:14   ⚠️  source "kitty": using stale cache (35 proxies)
+2026/07/19 22:23:16 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: HTTP 403
+2026/07/19 22:24:05 fetch source "kitty": fetch https://kaze1.aisaka-taiga.com/oosaka/a56e90805fd667daa53bfa6c0143d4bf: HTTP 403
+2026/07/19 22:24:05   using cached 35 proxies for "kitty"
+2026/07/19 22:24:05   ⚠️  source "kitty": using stale cache (35 proxies)
+2026/07/19 22:24:06 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: HTTP 403
+2026/07/19 22:25:52 fetch source "kitty": fetch https://kaze1.aisaka-taiga.com/oosaka/a56e90805fd667daa53bfa6c0143d4bf: HTTP 403
+2026/07/19 22:25:52   using cached 35 proxies for "kitty"
+2026/07/19 22:25:52   ⚠️  source "kitty": using stale cache (35 proxies)
+2026/07/19 22:25:54 fetch source "xfltd": fetch https://api2.xfltd.bond/cctv/user/client/get?token=MzMxODU5OjE4MTEwMTcwNGMzYzk4NjZlMmZmMzZkMGFjMDdiNmZmYTVlMTI4Zjk: HTTP 403
