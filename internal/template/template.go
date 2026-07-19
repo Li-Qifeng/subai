@@ -3,6 +3,7 @@ package template
 import (
 	"fmt"
 	"io"
+	"log"
 	"regexp"
 	"strings"
 	"sync/atomic"
@@ -173,7 +174,8 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 			group["proxies"] = members
 		} else if pg.Filter != "" {
 			// Filter proxies by regex
-			re, err := regexp.Compile("(?i)" + pg.Filter)
+			cleanFilter := cleanRegex(pg.Filter)
+			re, err := regexp.Compile("(?i)" + cleanFilter)
 			if err == nil {
 				var matched []string
 				for _, name := range allNames {
@@ -184,12 +186,15 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 				if len(matched) > 0 {
 					group["proxies"] = matched
 				} else {
-					group["proxies"] = allNames
+					// No matching proxies for this filter. Leave empty to avoid
+					// showing unrelated nodes (user's choice).
+					// Empty url-test groups are accepted by Clash.
+					group["proxies"] = []string{}
 				}
 			} else {
-				// Regex failed (PCRE feature not supported by Go's RE2)
-				// Fall back to all proxies to avoid empty groups
-				group["proxies"] = allNames
+				log.Printf("  filter regex compile failed for %q: %v (cleaned: %q)", pg.Name, err, cleanFilter)
+				// Regex failed even after cleaning — leave empty
+				group["proxies"] = []string{}
 			}
 		}
 
@@ -275,7 +280,68 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 		result.Rules = ApplyPatches(result.Rules, cfg.RulePatches)
 	}
 
+	// Enrich service group members: add all region groups + 自动选择 to select groups
+	// that only have one member (like only 🚀 手动选择). This matches the Aethersailor
+	// reference output where each service group offers all region groups as options.
+	enrichProxyGroups(result)
+
 	return result
+}
+
+// enrichProxyGroups adds all region group names to service groups that have
+// only one member (typically just 🚀 手动选择), so users can select any region
+// directly from each service group.
+func enrichProxyGroups(result *BuildResult) {
+	// Collect all url-test group names (except ♻️ 自动选择)
+	var allRegionNames []string
+	for _, g := range result.ProxyGroups {
+		name, _ := g["name"].(string)
+		gtype, _ := g["type"].(string)
+		if gtype == "url-test" && name != "♻️ 自动选择" {
+			allRegionNames = append(allRegionNames, name)
+		}
+	}
+	if len(allRegionNames) == 0 {
+		return
+	}
+
+	// Enrich select-type service groups that have only 1 member
+	for _, g := range result.ProxyGroups {
+		name, _ := g["name"].(string)
+		gtype, _ := g["type"].(string)
+		if gtype != "select" {
+			continue
+		}
+		// Skip top-level groups
+		if name == "🚀 手动选择" || name == "🎯 全球直连" || name == "🔀 非标端口" {
+			continue
+		}
+		members, _ := g["proxies"].([]string)
+		if len(members) <= 1 {
+			// Build enriched member list: original members + 自动选择 + region groups
+			seen := make(map[string]bool)
+			enriched := make([]string, 0, len(members)+len(allRegionNames)+1)
+			for _, m := range members {
+				if !seen[m] {
+					enriched = append(enriched, m)
+					seen[m] = true
+				}
+			}
+			// Add ♻️ 自动选择 if not already present
+			if !seen["♻️ 自动选择"] {
+				enriched = append(enriched, "♻️ 自动选择")
+				seen["♻️ 自动选择"] = true
+			}
+			// Add all region groups
+			for _, rn := range allRegionNames {
+				if !seen[rn] {
+					enriched = append(enriched, rn)
+					seen[rn] = true
+				}
+			}
+			g["proxies"] = enriched
+		}
+	}
 }
 
 // ruleLogWriter is used for logging rule fetch warnings.
@@ -644,6 +710,53 @@ func HasTemplate(name string) bool {
 		}
 	}
 	return false
+}
+
+// cleanRegex removes PCRE-only features that Go's RE2 doesn't support.
+// Currently handles:
+//   - (?<!...) negative lookbehind
+//   - (?<=...) positive lookbehind
+//   - (?!...) negative lookahead
+//   - (?=...) positive lookahead
+func cleanRegex(pattern string) string {
+	result := pattern
+	// Remove all lookaround assertions: (?<!...) (?<=...) (?!...) (?=...)
+	// These are removed entirely, leaving the text that follows them.
+	// E.g. "(?<!尼|-)日" → "日"
+	prefixes := []string{"(?<!", "(?<=", "(?!", "(?="}
+	for _, prefix := range prefixes {
+		for {
+			start := strings.Index(result, prefix)
+			if start < 0 {
+				break
+			}
+			// Find the closing parenthesis of the lookaround
+			depth := 1
+			end := start + len(prefix)
+			for end < len(result) && depth > 0 {
+				if result[end] == '(' {
+					depth++
+				} else if result[end] == ')' {
+					depth--
+				}
+				end++
+			}
+			// Remove the lookaround group only (keep the | before and text after)
+			// E.g. "...|(?<!尼|-)日|..." → "...|日|..."
+			result = result[:start] + result[end:]
+		}
+	}
+	// Clean up any remaining empty alternations: || → |, |) → ), (| → (
+	for strings.Contains(result, "||") {
+		result = strings.ReplaceAll(result, "||", "|")
+	}
+	for strings.Contains(result, "|)") {
+		result = strings.ReplaceAll(result, "|)", ")")
+	}
+	for strings.Contains(result, "(|") {
+		result = strings.ReplaceAll(result, "(|", "(")
+	}
+	return result
 }
 
 // SanitizeGroupName makes a name safe for use as a group name in YAML.
