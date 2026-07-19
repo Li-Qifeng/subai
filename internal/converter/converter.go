@@ -51,12 +51,16 @@ func NewWithTemplate(cfg *template.Config) *Engine {
 				base.ProxyGroups = cfg.ProxyGroups
 			}
 			if len(cfg.RuleSets) > 0 {
-				base.RuleSets = cfg.RuleSets
+				base.RuleSets = append(base.RuleSets, cfg.RuleSets...)
 			}
+			if len(cfg.RulePatches) > 0 {
+				base.RulePatches = append(base.RulePatches, cfg.RulePatches...)
+			}
+			// Config-level settings always override template
 			base.RuleProviders = cfg.RuleProviders
 			base.ProviderInterval = cfg.ProviderInterval
 			base.ProviderProxy = cfg.ProviderProxy
-			base.RulePatches = cfg.RulePatches
+			base.FetchRules = cfg.FetchRules
 			return &Engine{tmplCfg: base}
 		}
 	}
