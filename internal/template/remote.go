@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -14,7 +15,7 @@ import (
 
 const (
 	// DefaultRemoteURL is the default remote template repository URL.
-	DefaultRemoteURL = "https://raw.githubusercontent.com/Li-Qifeng/subai/main/templates"
+	DefaultRemoteURL = "https://raw.githubusercontent.com/Aethersailor/Custom_OpenClash_Rules/main/cfg"
 
 	// cacheSubdir is the subdirectory under the user's home for template cache.
 	cacheSubdir = ".subai/templates"
@@ -81,8 +82,7 @@ func syncIndex(remoteURL string, dir string) ([]TemplateIndexEntry, error) {
 	return index, nil
 }
 
-// SyncTemplates fetches the latest template index and template files
-// from the remote repository and caches them locally.
+// SyncTemplates fetches the latest Aethersailor INI templates and converts them to YAML.
 func SyncTemplates(remoteURL string) error {
 	if remoteURL == "" {
 		remoteURL = DefaultRemoteURL
@@ -95,28 +95,53 @@ func SyncTemplates(remoteURL string) error {
 
 	fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  📥 Syncing templates from %s ...\n", remoteURL)
 
-	index, err := syncIndex(remoteURL, dir)
-	if err != nil {
-		return err
+	// Aethersailor INI templates to sync
+	templates := []struct {
+		Name string
+		File string
+		Desc string
+	}{
+		{Name: "aethersailor_full", File: "Custom_Clash_Full.ini", Desc: "Aethersailor 全分组防 DNS 泄漏模板 (50 策略组)"},
+		{Name: "aethersailor_lite", File: "Custom_Clash_Lite.ini", Desc: "Aethersailor 轻量分组模板 (19 策略组)"},
+		{Name: "aethersailor_gfw", File: "Custom_Clash_GFW.ini", Desc: "Aethersailor GFW 模式模板"},
 	}
 
 	downloaded := 0
-	for _, entry := range index {
-		fileURL := remoteURL + "/" + entry.File
+	for _, t := range templates {
+		fileURL := remoteURL + "/" + t.File
 		body, err := getWithTimeout(fileURL)
 		if err != nil {
-			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: %v\n", entry.Name, err)
+			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: %v\n", t.Name, err)
 			continue
 		}
-		dst := filepath.Join(dir, entry.File)
-		if err := os.WriteFile(dst, body, 0644); err != nil {
-			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: write failed: %v\n", entry.Name, err)
+
+		// Parse INI to Config
+		cfg, err := parseINITemplate(body, t.Name)
+		if err != nil {
+			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: parse error: %v\n", t.Name, err)
+			continue
+		}
+
+		// Marshal to YAML
+		yamlBody, err := yaml.Marshal(cfg)
+		if err != nil {
+			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: marshal error: %v\n", t.Name, err)
+			continue
+		}
+
+		// Add YAML frontmatter
+		frontmatter := fmt.Sprintf("---\ntemplate: %s\ndescription: %s\n---\n", t.Name, t.Desc)
+		fullBody := append([]byte(frontmatter), yamlBody...)
+
+		dst := filepath.Join(dir, t.Name+".yaml")
+		if err := os.WriteFile(dst, fullBody, 0644); err != nil {
+			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: write failed: %v\n", t.Name, err)
 			continue
 		}
 		downloaded++
 	}
 
-	fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ✅ Synced %d/%d templates\n", downloaded, len(index))
+	fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ✅ Synced %d/%d templates\n", downloaded, len(templates))
 	return nil
 }
 
@@ -128,19 +153,21 @@ func ListCachedTemplates() ([]TemplateIndexEntry, error) {
 		return nil, err
 	}
 
-	idxPath := filepath.Join(dir, "index.json")
-	if _, err := os.Stat(idxPath); os.IsNotExist(err) {
-		return nil, nil // no cache yet
-	}
-
-	body, err := os.ReadFile(idxPath)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, fmt.Errorf("read cache index failed: %w", err)
+		return nil, nil
 	}
 
 	var index []TemplateIndexEntry
-	if err := json.Unmarshal(body, &index); err != nil {
-		return nil, fmt.Errorf("parse cache index failed: %w", err)
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".yaml") {
+			continue
+		}
+		name := strings.TrimSuffix(e.Name(), ".yaml")
+		index = append(index, TemplateIndexEntry{
+			Name: name,
+			File: e.Name(),
+		})
 	}
 
 	return index, nil

@@ -743,7 +743,7 @@ func loyalsoldierTemplate() *Config {
 
 // AvailableTemplates returns a list of built-in template names with descriptions.
 func AvailableTemplates() []string {
-	return []string{"basic", "acl4ssr_full", "acl4ssr_lite", "loyalsoldier"}
+	return []string{"basic", "acl4ssr_full", "acl4ssr_lite", "loyalsoldier", "aethersailor_full", "aethersailor_lite", "aethersailor_gfw"}
 }
 
 // HasTemplate returns true if the given name is a valid built-in or cached template.
