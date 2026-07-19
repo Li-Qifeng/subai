@@ -15,6 +15,6 @@ rules: {}
 output:
     target: clash
     pretty: true
-    template: acl4ssr_online_full_multimode
+    template: aethersailor_full
     fetch_rules: false
     rule_providers: true

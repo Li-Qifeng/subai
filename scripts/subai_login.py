@@ -3,13 +3,8 @@
 subai login helper — V2Board login.
 
 Two strategies:
-1. cloudscraper (CF bypass, fast) — primary
-2. Playwright (headless Chromium) — last resort for complex challenges
-
-NOTES:
-- Uses cloudscraper with requests timeout only (no signal.alarm — it interferes
-  with urllib3's SSL socket calls and causes hangs).
-- Playwright fallback for sites with JS challenges cloudscraper can't solve.
+1. Playwright (headless Chromium) — primary for sites with JS/geetest challenges
+2. cloudscraper (CF bypass, fast) — fallback for simpler sites
 
 Input: JSON over stdin one line
 Output: JSON over stdout one line
@@ -18,7 +13,7 @@ Output: JSON over stdout one line
 import json, sys, time
 
 
-def _retry(fn, *args, max_attempts=3, delay=2):
+def _retry(fn, *args, max_attempts=3, delay=3):
     """Retry a strategy up to max_attempts times with delay between attempts."""
     for attempt in range(1, max_attempts + 1):
         try:
@@ -30,7 +25,55 @@ def _retry(fn, *args, max_attempts=3, delay=2):
             time.sleep(delay)
 
 
-# ---- Strategy 1: cloudscraper ----
+# ---- Strategy 1: Playwright (primary) ----
+def try_playwright(base_url, email, password):
+    """Use Playwright to solve CF/geetest challenge, then Python requests for API calls."""
+    from playwright.sync_api import sync_playwright
+    import requests as py_requests
+    url_clean = base_url.rstrip('/')
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-setuid-sandbox'],
+        )
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        )
+        page = context.new_page()
+
+        # Navigate and wait for Cloudflare challenge to resolve
+        page.goto(url_clean + "/", timeout=30000)
+        for _ in range(20):
+            try:
+                title = page.title()
+                if title and '安全检查' not in title and 'Just a moment' not in title:
+                    break
+            except:
+                pass
+            page.wait_for_timeout(1000)
+
+        page.wait_for_load_state("networkidle", timeout=15000)
+        page.wait_for_timeout(2000)
+
+        # Extract cookies for requests session
+        session = py_requests.Session()
+        for cookie in context.cookies():
+            session.cookies.set(cookie['name'], cookie['value'],
+                                domain=cookie['domain'], path=cookie['path'])
+
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        })
+
+        browser.close()
+
+    return _v2board_api(session, url_clean, email, password)
+
+
+# ---- Strategy 2: cloudscraper ----
 def try_cloudscraper(base_url, email, password):
     """Use cloudscraper to bypass Cloudflare and login."""
     import cloudscraper
@@ -48,9 +91,6 @@ def try_cloudscraper(base_url, email, password):
     # Warm up — solve CF challenge (best-effort)
     r = scraper.get(url_clean + "/", timeout=30)
 
-    # Login — if warmup didn't bypass, the session may still work
-    # (cloudscraper handles cookie/Sess challenges at transport level)
-
     # Login
     r = scraper.post(
         url_clean + "/api/v1/passport/auth/login",
@@ -65,52 +105,9 @@ def try_cloudscraper(base_url, email, password):
     return _parse_login_response(r, url_clean, scraper)
 
 
-# ---- Strategy 2: Playwright ----
-def try_playwright(base_url, email, password):
-    """Use Playwright to solve CF challenge, then Python requests for API calls."""
-    from playwright.sync_api import sync_playwright
-    url_clean = base_url.rstrip('/')
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=['--no-sandbox', '--disable-setuid-sandbox'],
-        )
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        )
-        page = context.new_page()
-        page.goto(url_clean + "/", timeout=30000)
-
-        # Wait for CF challenge to resolve (max 15s — challenge has 5s countdown)
-        for _ in range(15):
-            try:
-                title = page.title()
-                if title and '安全检查' not in title:
-                    break
-            except:
-                pass
-            page.wait_for_timeout(1000)
-
-        page.wait_for_load_state("networkidle", timeout=10000)
-        page.wait_for_timeout(1000)
-
-        # Extract cookies from browser context and build a requests Session
-        import requests as py_requests
-        session = py_requests.Session()
-        for cookie in context.cookies():
-            session.cookies.set(cookie['name'], cookie['value'],
-                                domain=cookie['domain'], path=cookie['path'])
-
-        session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        })
-
-        browser.close()
-
-    # Now use the requests Session (with CF cookies) for API calls
+# ---- Shared API helpers ----
+def _v2board_api(session, url_clean, email, password):
+    """Login to V2Board and fetch user info + subscribe URL via requests session."""
     r = session.post(
         url_clean + "/api/v1/passport/auth/login",
         json={"email": email, "password": password},

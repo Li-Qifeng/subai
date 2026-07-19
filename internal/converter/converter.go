@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/user/subai/internal/parser"
@@ -112,7 +114,11 @@ func (e *Engine) toClash(proxies []parser.Proxy) ([]byte, error) {
 		out["rule-providers"] = providers
 	}
 
-	return yaml.Marshal(out)
+	data, err := yaml.Marshal(out)
+	if err != nil {
+		return nil, fmt.Errorf("marshal yaml: %w", err)
+	}
+	return unescapeYAML(data), nil
 }
 
 // toBase64 generates a base64-encoded subscription (URI list).
@@ -151,6 +157,18 @@ func (e *Engine) toMixed(proxies []parser.Proxy) ([]byte, error) {
 	buf.WriteByte('\n')
 
 	return buf.Bytes(), nil
+}
+
+// unescapeYAML replaces \UXXXXXXXX escape sequences (from yaml.v3's non-BMP
+// escaping) with the actual Unicode characters, preventing garbled display
+// in Clash clients that don't support these YAML escape sequences.
+func unescapeYAML(data []byte) []byte {
+	re := regexp.MustCompile(`\\U([0-9a-fA-F]{8})`)
+	return re.ReplaceAllFunc(data, func(match []byte) []byte {
+		hex := string(match[2:]) // skip \U
+		n, _ := strconv.ParseUint(hex, 16, 32)
+		return []byte(string(rune(n)))
+	})
 }
 
 // proxyToURI converts a Proxy back to a subscription URI string.
