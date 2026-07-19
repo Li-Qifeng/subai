@@ -186,6 +186,10 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 				} else {
 					group["proxies"] = allNames
 				}
+			} else {
+				// Regex failed (PCRE feature not supported by Go's RE2)
+				// Fall back to all proxies to avoid empty groups
+				group["proxies"] = allNames
 			}
 		}
 
