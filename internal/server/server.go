@@ -104,22 +104,35 @@ func (s *Server) saveDiskCache(name string, proxies parser.ProxyList) {
 }
 
 // loadDiskCache loads proxies from disk cache.
+// First tries the proxy-level JSON format, then falls back to
+// raw fetch cache (from fetcher.PersistentCache).
 func (s *Server) loadDiskCache(name string) parser.ProxyList {
 	path := s.cachePath(name)
 	if path == "" {
 		return nil
 	}
+	// Try proxy-level JSON cache first
 	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil // file doesn't exist or can't read
+	if err == nil {
+		var proxies parser.ProxyList
+		if err := json.Unmarshal(data, &proxies); err == nil && len(proxies) > 0 {
+			log.Printf("  loaded %d cached proxies for %q from disk", len(proxies), name)
+			return proxies
+		}
 	}
-	var proxies parser.ProxyList
-	if err := json.Unmarshal(data, &proxies); err != nil {
-		log.Printf("cache: unmarshal %q: %v", name, err)
+	// Fall back to raw fetch cache (from fetcher.PersistentCache)
+	rawPath := filepath.Join(filepath.Dir(path), ".cache_"+name+".raw")
+	rawData, err := os.ReadFile(rawPath)
+	if err != nil {
+		return nil
+	}
+	proxies, err := parser.ParseAuto(rawData)
+	if err != nil {
+		log.Printf("cache: parse raw cache for %q: %v", name, err)
 		return nil
 	}
 	if len(proxies) > 0 {
-		log.Printf("  loaded %d cached proxies for %q from disk", len(proxies), name)
+		log.Printf("  loaded %d cached proxies for %q from raw disk cache", len(proxies), name)
 	}
 	return proxies
 }
