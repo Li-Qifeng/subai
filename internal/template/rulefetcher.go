@@ -92,8 +92,11 @@ func ExpandRuleSets(ruleSets []RuleSet) ([]string, []error) {
 			if strings.HasPrefix(line, "RULE-SET,") {
 				continue
 			}
-			// Append group to each rule
-			rule := line + "," + rs.Group
+			// Append group to each rule, avoiding double-append
+			rule := line
+			if !strings.HasSuffix(line, ","+rs.Group) {
+				rule = line + "," + rs.Group
+			}
 			// Remove trailing comma if the rule already ends with a group
 			// (some rule formats like GEOIP,CN already have implicit actions)
 			rules = append(rules, rule)

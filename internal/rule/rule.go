@@ -2,6 +2,7 @@ package rule
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 )
@@ -49,6 +50,7 @@ func (e *Engine) AddRule(r Rule) {
 //   Exclude always applies.
 func (e *Engine) Apply(proxies []Proxy) []Proxy {
 	if err := e.compile(); err != nil {
+		log.Printf("rule engine: compile failed, returning all proxies unfiltered: %v", err)
 		return proxies
 	}
 

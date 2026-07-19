@@ -229,6 +229,7 @@ A custom URL can be provided as an argument.`,
 		RunE:  runDryRun,
 	}
 	dryRunCmd.Flags().StringVarP(&target, "target", "t", "clash", "Output format")
+	dryRunCmd.Flags().String("profile", "", "Use named profile (overrides current_profile)")
 	rootCmd.AddCommand(dryRunCmd)
 
 	// Version command
@@ -321,7 +322,7 @@ func runConvert(cmd *cobra.Command, args []string) error {
 	} else {
 		// Config mode
 		var err error
-		cfg, err = config.Load(cfgFile)
+		cfg, err = config.LoadAndValidate(cfgFile)
 		if err != nil {
 			return fmt.Errorf("load config %s: %w", cfgFile, err)
 		}
@@ -409,7 +410,7 @@ func runConvert(cmd *cobra.Command, args []string) error {
 }
 
 func runValidate(cmd *cobra.Command, args []string) error {
-	cfg, err := config.Load(cfgFile)
+	cfg, err := config.LoadAndValidate(cfgFile)
 	if err != nil {
 		return fmt.Errorf("config error: %w", err)
 	}
@@ -471,12 +472,15 @@ func runValidate(cmd *cobra.Command, args []string) error {
 }
 
 func runDryRun(cmd *cobra.Command, args []string) error {
-	cfg, err := config.Load(cfgFile)
+	cfg, err := config.LoadAndValidate(cfgFile)
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	var totalProxies int
+	profileName, _ := cmd.Flags().GetString("profile")
+	cfg = cfg.Resolve(profileName)
+
+	var allProxies []parser.Proxy
 	for _, src := range cfg.Sources {
 		body, err := fetcher.Fetch(src.URL, src.Cookie, src.UserAgent)
 		if err != nil {
@@ -488,13 +492,44 @@ func runDryRun(cmd *cobra.Command, args []string) error {
 			log.Printf("parse %q: %v", src.Name, err)
 			continue
 		}
-		totalProxies += len(proxies)
+		allProxies = append(allProxies, proxies...)
 		fmt.Fprintf(os.Stderr, "  📦 %s: %d proxies\n", src.Name, len(proxies))
+	}
+
+	// Apply rules
+	if len(cfg.Rules.Include) > 0 || len(cfg.Rules.Exclude) > 0 {
+		var filtered parser.ProxyList
+		for _, p := range allProxies {
+			excluded := false
+			for _, pat := range cfg.Rules.Exclude {
+				if strings.Contains(strings.ToLower(p.Name), strings.ToLower(pat)) {
+					excluded = true
+					break
+				}
+			}
+			if excluded {
+				continue
+			}
+			if len(cfg.Rules.Include) > 0 {
+				included := false
+				for _, pat := range cfg.Rules.Include {
+					if strings.Contains(strings.ToLower(p.Name), strings.ToLower(pat)) {
+						included = true
+						break
+					}
+				}
+				if !included {
+					continue
+				}
+			}
+			filtered = append(filtered, p)
+		}
+		allProxies = filtered
 	}
 
 	out := map[string]interface{}{
 		"sources":       len(cfg.Sources),
-		"total_proxies": totalProxies,
+		"total_proxies": len(allProxies),
 		"target":        target,
 		"output_file":   outputFile,
 	}
@@ -506,7 +541,10 @@ func runDryRun(cmd *cobra.Command, args []string) error {
 		out["exclude_rules"] = cfg.Rules.Exclude
 	}
 
-	data, _ := json.MarshalIndent(out, "", "  ")
+	data, err := json.MarshalIndent(out, "", "  ")
+	if err != nil {
+		return fmt.Errorf("json marshal: %w", err)
+	}
 	fmt.Println(string(data))
 	return nil
 }
@@ -652,7 +690,7 @@ func newSourceCmd() *cobra.Command {
 			}
 			for i, src := range cfg.Sources {
 				fmt.Printf("%d. %s\n", i+1, src.Name)
-				fmt.Printf("   URL: %s\n", src.URL)
+				fmt.Printf("   URL: %s\n", maskURLToken(src.URL))
 				if src.Cookie != "" {
 					fmt.Printf("   Cookie: %s\n", maskString(src.Cookie, 20))
 				}
@@ -735,10 +773,42 @@ func newSourceCmd() *cobra.Command {
 }
 
 func maskString(s string, maxLen int) string {
+	if len(s) < 3 {
+		return "***"
+	}
 	if len(s) <= maxLen {
 		return s[:len(s)/3] + "***" + s[len(s)-len(s)/3:]
 	}
 	return s[:maxLen/3] + "..." + s[len(s)-maxLen/3:]
+}
+
+// maskURLToken masks token/API key in subscription URLs to prevent leakage.
+func maskURLToken(rawURL string) string {
+	idx := strings.Index(rawURL, "?")
+	if idx < 0 {
+		return rawURL
+	}
+	base := rawURL[:idx]
+	query := rawURL[idx+1:]
+	var masked []string
+	for _, param := range strings.Split(query, "&") {
+		kv := strings.SplitN(param, "=", 2)
+		if len(kv) == 2 {
+			key := strings.ToLower(kv[0])
+			if key == "token" || key == "key" || key == "api_key" || key == "apikey" || key == "secret" || key == "password" || key == "auth" {
+				val := kv[1]
+				if len(val) > 8 {
+					val = val[:4] + "****" + val[len(val)-4:]
+				} else {
+					val = "****"
+				}
+				masked = append(masked, kv[0]+"="+val)
+				continue
+			}
+		}
+		masked = append(masked, param)
+	}
+	return base + "?" + strings.Join(masked, "&")
 }
 
 // isProxyURI checks if a string looks like a proxy URI rather than an HTTP URL.

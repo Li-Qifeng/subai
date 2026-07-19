@@ -167,7 +167,7 @@ func (s *Server) refreshLoop() {
 func (s *Server) refreshAndNotify() {
 	log.Printf("auto-refresh: starting refresh cycle")
 
-	cfg, err := config.Load(s.configPath)
+	cfg, err := config.LoadAndValidate(s.configPath)
 	if err != nil {
 		log.Printf("auto-refresh: load config: %v", err)
 		return
@@ -311,7 +311,7 @@ func (s *Server) handleSub(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Load config
-	cfg, err := config.Load(s.configPath)
+	cfg, err := config.LoadAndValidate(s.configPath)
 	if err != nil {
 		log.Printf("sub: load config: %v", err)
 		http.Error(w, fmt.Sprintf(`{"error":"load config: %v"}`, err), http.StatusInternalServerError)

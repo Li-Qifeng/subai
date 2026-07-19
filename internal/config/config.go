@@ -20,8 +20,6 @@ type Config struct {
 }
 
 // Profile defines a named configuration profile that overrides the base config.
-// Fields set in a profile replace the corresponding root-level fields
-// when the profile is active. Unset fields fall through to the root config.
 type Profile struct {
 	Sources []Source `yaml:"sources,omitempty"`
 	Rules   *Rules   `yaml:"rules,omitempty"`  // pointer: nil = not set, non-nil = override
@@ -34,17 +32,16 @@ type Source struct {
 	URL          string `yaml:"url"`
 	Cookie       string `yaml:"cookie,omitempty"`
 	UserAgent    string `yaml:"user-agent,omitempty"`
-	RefreshCron  string `yaml:"refresh-cron,omitempty"`  // Cron expression for auto-refresh
-	Login        *Login `yaml:"login,omitempty"`          // Automated login config
+	RefreshCron  string `yaml:"refresh-cron,omitempty"`
+	Login        *Login `yaml:"login,omitempty"`
 }
 
 // Login defines the configuration for automated panel login.
-// Supported methods: "v2board"
 type Login struct {
-	Method   string `yaml:"method"`            // Login method: "v2board"
-	URL      string `yaml:"url"`               // Panel base URL, e.g. "https://www.xfltd.org"
-	Email    string `yaml:"email"`              // Login email
-	Password string `yaml:"password"`           // Login password
+	Method   string `yaml:"method"`
+	URL      string `yaml:"url"`
+	Email    string `yaml:"email"`
+	Password string `yaml:"password"`
 }
 
 // Rules defines filtering rules for proxy selection.
@@ -55,22 +52,24 @@ type Rules struct {
 
 // Output defines the output target configuration.
 type Output struct {
-	Target   string           `yaml:"target"`             // clash, base64, singbox, mixed
-	Path     string           `yaml:"path,omitempty"`     // output file path
-	Pretty   bool             `yaml:"pretty"`             // pretty-print output
-	Template template.Config  `yaml:",inline"`            // template config (merged inline)
+	Target   string           `yaml:"target"`
+	Path     string           `yaml:"path,omitempty"`
+	Pretty   bool             `yaml:"pretty"`
+	Template template.Config  `yaml:",inline"`
 }
 
 // Server defines the optional HTTP server configuration.
 type Server struct {
 	Enabled bool   `yaml:"enabled"`
-	Listen  string `yaml:"listen"` // e.g. ":8080"
+	Listen  string `yaml:"listen"`
 	Token   string `yaml:"token,omitempty"`
 }
 
 var validTargets = map[string]bool{"clash": true, "base64": true, "singbox": true, "mixed": true}
 
-// Load reads and parses a YAML config file.
+// Load reads and parses a YAML config file WITHOUT validation.
+// Use this for management commands (source add, rule add, login, etc.)
+// that need to read and modify the config even if it's incomplete.
 func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -80,13 +79,23 @@ func Load(path string) (*Config, error) {
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
-	if errs := cfg.Validate(); len(errs) > 0 {
-		return nil, fmt.Errorf("invalid config: %v", errs)
-	}
 	return &cfg, nil
 }
 
-// Save writes the config to a YAML file atomically (write to temp, then rename).
+// LoadAndValidate reads, parses, AND validates a config file.
+// Use this for commands that actually use the config (convert, validate, serve).
+func LoadAndValidate(path string) (*Config, error) {
+	cfg, err := Load(path)
+	if err != nil {
+		return nil, err
+	}
+	if errs := cfg.Validate(); len(errs) > 0 {
+		return nil, fmt.Errorf("invalid config: %v", errs)
+	}
+	return cfg, nil
+}
+
+// Save writes the config to a YAML file atomically.
 func (c *Config) Save(path string) error {
 	if c == nil {
 		return fmt.Errorf("config is nil")
@@ -95,7 +104,6 @@ func (c *Config) Save(path string) error {
 	if err != nil {
 		return fmt.Errorf("marshal config: %w", err)
 	}
-	// Write to temp file first, then rename for atomicity
 	dir := filepath.Dir(path)
 	tmpPath := filepath.Join(dir, "."+filepath.Base(path)+".tmp")
 	if err := os.WriteFile(tmpPath, data, 0644); err != nil {
@@ -126,13 +134,11 @@ func (c *Config) Validate() []error {
 	} else if !validTargets[c.Output.Target] {
 		errs = append(errs, fmt.Errorf("output.target: %q is not valid (must be clash, base64, singbox, or mixed)", c.Output.Target))
 	}
-	// Validate CurrentProfile
 	if c.CurrentProfile != "" && c.Profiles != nil {
 		if _, ok := c.Profiles[c.CurrentProfile]; !ok {
 			errs = append(errs, fmt.Errorf("current_profile %q not found in profiles", c.CurrentProfile))
 		}
 	}
-	// Validate profiles
 	for name, p := range c.Profiles {
 		for i, s := range p.Sources {
 			if s.Name == "" {
@@ -151,7 +157,6 @@ func (c *Config) Validate() []error {
 			}
 		}
 	}
-	// Validate server
 	if c.Server.Enabled && c.Server.Listen == "" {
 		errs = append(errs, fmt.Errorf("server.listen is required when server.enabled is true"))
 	}
@@ -178,8 +183,6 @@ func validateLogin(l *Login, prefix string) []error {
 }
 
 // Resolve returns the effective config for the given profile name.
-// If profileName is empty, uses CurrentProfile. Falls back to root config
-// when the profile is not found or has no profile system.
 func (c *Config) Resolve(profileName string) *Config {
 	if c == nil {
 		return nil
@@ -188,27 +191,23 @@ func (c *Config) Resolve(profileName string) *Config {
 		profileName = c.CurrentProfile
 	}
 	if profileName == "" || c.Profiles == nil {
-		return c // no profile active
+		return c
 	}
 	p, ok := c.Profiles[profileName]
 	if !ok {
-		return c // unknown profile, return root
+		return c
 	}
 
-	// Deep copy: shallow copy struct, then deep-copy slices
 	resolved := *c
-	// Deep-copy sources (to avoid sharing backing array)
 	if len(p.Sources) > 0 {
 		resolved.Sources = p.Sources
 	} else if c.Sources != nil {
 		resolved.Sources = make([]Source, len(c.Sources))
 		copy(resolved.Sources, c.Sources)
 	}
-	// Override rules
 	if p.Rules != nil {
 		resolved.Rules = *p.Rules
 	}
-	// Override output — merge template config to preserve root template settings
 	if p.Output != nil {
 		merged := resolved.Output
 		if p.Output.Target != "" {
@@ -218,7 +217,6 @@ func (c *Config) Resolve(profileName string) *Config {
 			merged.Path = p.Output.Path
 		}
 		merged.Pretty = p.Output.Pretty
-		// Merge template fields: only override if profile explicitly sets them
 		if p.Output.Template.Template != "" {
 			merged.Template.Template = p.Output.Template.Template
 		}

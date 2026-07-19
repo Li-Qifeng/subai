@@ -113,7 +113,7 @@ func blackmatrix7Repo() Repo {
 			{ID: "blackmatrix7/GaoDe", Name: "GaoDe", Category: "Mainland", Tags: []string{"高德", "地图"}, Description: "高德", URL: makeURL("GaoDe"), Behavior: "domain"},
 			{ID: "blackmatrix7/Gitee", Name: "Gitee", Category: "Mainland", Tags: []string{"码云", "开发"}, Description: "Gitee 码云", URL: makeURL("Gitee"), Behavior: "domain"},
 			{ID: "blackmatrix7/Himalaya", Name: "Himalaya", Category: "Mainland", Tags: []string{"喜马拉雅", "音频"}, Description: "喜马拉雅", URL: makeURL("Himalaya"), Behavior: "domain"},
-			{ID: "blackmatrix7/HoYoverse", Name: "HoYoverse", Category: "Mainland", Tags: []string{"米哈游", "原神", "游戏"}, Description: "米哈游 HoYoverse（原神/星穹铁道）", URL: makeURL("Game/HoYoverse"), Behavior: "domain"},
+			{ID: "blackmatrix7/HoYoverse", Name: "HoYoverse", Category: "Mainland", Tags: []string{"米哈游", "原神", "游戏"}, Description: "米哈游 HoYoverse（原神/星穹铁道）", URL: base + "/Game/HoYoverse/HoYoverse.yaml", Behavior: "domain"},
 			{ID: "blackmatrix7/Huawei", Name: "Huawei", Category: "Mainland", Tags: []string{"华为", "手机"}, Description: "华为", URL: makeURL("Huawei"), Behavior: "domain"},
 			{ID: "blackmatrix7/Hupu", Name: "Hupu", Category: "Mainland", Tags: []string{"虎扑", "社区"}, Description: "虎扑", URL: makeURL("Hupu"), Behavior: "domain"},
 			{ID: "blackmatrix7/HuYa", Name: "HuYa", Category: "Mainland", Tags: []string{"虎牙", "直播"}, Description: "虎牙", URL: makeURL("HuYa"), Behavior: "domain"},
@@ -149,9 +149,9 @@ func blackmatrix7Repo() Repo {
 			{ID: "blackmatrix7/Docker", Name: "Docker", Category: "Dev", Tags: []string{"docker", "开发"}, Description: "Docker", URL: makeURL("Docker"), Behavior: "domain"},
 			{ID: "blackmatrix7/Cloudflare", Name: "Cloudflare", Category: "Dev", Tags: []string{"cloudflare", "cdn"}, Description: "Cloudflare", URL: makeURL("Cloudflare"), Behavior: "domain"},
 			{ID: "blackmatrix7/Developer", Name: "Developer", Category: "Dev", Tags: []string{"开发者", "开发"}, Description: "开发者相关合集", URL: makeURL("Developer"), Behavior: "domain"},
-			{ID: "blackmatrix7/AmazonCloud", Name: "AmazonCloud", Category: "Dev", Tags: []string{"aws", "amazon", "云"}, Description: "Amazon Web Services", URL: makeURL("Cloud/AmazonCloud"), Behavior: "ipcidr"},
-			{ID: "blackmatrix7/CloudCN", Name: "CloudCN", Category: "Dev", Tags: []string{"国内云", "云计算"}, Description: "国内云计算合集", URL: makeURL("Cloud/CloudCN"), Behavior: "ipcidr"},
-			{ID: "blackmatrix7/CloudGlobal", Name: "CloudGlobal", Category: "Dev", Tags: []string{"全球云", "云计算"}, Description: "全球云计算合集", URL: makeURL("Cloud/CloudGlobal"), Behavior: "ipcidr"},
+			{ID: "blackmatrix7/AmazonCloud", Name: "AmazonCloud", Category: "Dev", Tags: []string{"aws", "amazon", "云"}, Description: "Amazon Web Services", URL: base + "/Cloud/AmazonCloud/AmazonCloud.yaml", Behavior: "ipcidr"},
+			{ID: "blackmatrix7/CloudCN", Name: "CloudCN", Category: "Dev", Tags: []string{"国内云", "云计算"}, Description: "国内云计算合集", URL: base + "/Cloud/CloudCN/CloudCN.yaml", Behavior: "ipcidr"},
+			{ID: "blackmatrix7/CloudGlobal", Name: "CloudGlobal", Category: "Dev", Tags: []string{"全球云", "云计算"}, Description: "全球云计算合集", URL: base + "/Cloud/CloudGlobal/CloudGlobal.yaml", Behavior: "ipcidr"},
 
 			// === 下载 ===
 			{ID: "blackmatrix7/Download", Name: "Download", Category: "Download", Tags: []string{"下载", "download"}, Description: "下载工具合集", URL: makeURL("Download"), Behavior: "domain"},

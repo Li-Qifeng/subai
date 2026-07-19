@@ -93,7 +93,7 @@ func SyncTemplates(remoteURL string) error {
 		return err
 	}
 
-	fmt.Fprintf(ruleLogWriter, "  📥 Syncing templates from %s ...\n", remoteURL)
+	fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  📥 Syncing templates from %s ...\n", remoteURL)
 
 	index, err := syncIndex(remoteURL, dir)
 	if err != nil {
@@ -105,18 +105,18 @@ func SyncTemplates(remoteURL string) error {
 		fileURL := remoteURL + "/" + entry.File
 		body, err := getWithTimeout(fileURL)
 		if err != nil {
-			fmt.Fprintf(ruleLogWriter, "  ⚠️  %s: %v\n", entry.Name, err)
+			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: %v\n", entry.Name, err)
 			continue
 		}
 		dst := filepath.Join(dir, entry.File)
 		if err := os.WriteFile(dst, body, 0644); err != nil {
-			fmt.Fprintf(ruleLogWriter, "  ⚠️  %s: write failed: %v\n", entry.Name, err)
+			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %s: write failed: %v\n", entry.Name, err)
 			continue
 		}
 		downloaded++
 	}
 
-	fmt.Fprintf(ruleLogWriter, "  ✅ Synced %d/%d templates\n", downloaded, len(index))
+	fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ✅ Synced %d/%d templates\n", downloaded, len(index))
 	return nil
 }
 

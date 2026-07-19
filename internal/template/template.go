@@ -5,6 +5,7 @@ import (
 	"io"
 	"regexp"
 	"strings"
+	"sync/atomic"
 
 	"github.com/user/subai/internal/parser"
 )
@@ -203,7 +204,7 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 		// Mode 1: fetch and expand all RULE-SET URLs into inline rules
 		inlineRules, errs := ExpandRuleSets(cfg.RuleSets)
 		for _, err := range errs {
-			fmt.Fprintf(ruleLogWriter, "  ⚠️  %v\n", err)
+			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  %v\n", err)
 		}
 		result.Rules = append(result.Rules, inlineRules...)
 
@@ -274,12 +275,26 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 }
 
 // ruleLogWriter is used for logging rule fetch warnings.
-// Defaults to a no-op writer; can be replaced for testing.
-var ruleLogWriter io.Writer = &noopWriter{}
+// Defaults to io.Discard; can be replaced via SetLogWriter.
+// Uses atomic.Value with a wrapper type so different io.Writer
+// implementations can be stored without panic.
+type logWriterWrapper struct {
+	writer io.Writer
+}
+
+func (w logWriterWrapper) Write(p []byte) (n int, err error) {
+	return w.writer.Write(p)
+}
+
+var ruleLogWriter atomic.Value
+
+func init() {
+	ruleLogWriter.Store(logWriterWrapper{io.Discard})
+}
 
 // SetLogWriter sets the writer for rule fetch logs. Pass os.Stderr for CLI output.
 func SetLogWriter(w io.Writer) {
-	ruleLogWriter = w
+	ruleLogWriter.Store(logWriterWrapper{w})
 }
 
 // buildRuleLine generates a single rule line from a RuleSet.
@@ -366,19 +381,11 @@ func ApplyPatches(rules []string, patches []RulePatch) []string {
 		case p.Position == "bottom" || p.Position == "end":
 			bottoms = append(bottoms, p)
 		case strings.HasPrefix(p.Position, "before:") || strings.HasPrefix(p.Position, "before "):
-			target := strings.TrimPrefix(p.Position, "before:")
-			target = strings.TrimPrefix(target, "before ")
-			target = strings.TrimSpace(target)
 			positioned = append(positioned, positionedPatch{patch: p, isBefore: true})
-			_ = target // evaluated at apply time
 		case strings.HasPrefix(p.Position, "after:") || strings.HasPrefix(p.Position, "after "):
-			target := strings.TrimPrefix(p.Position, "after:")
-			target = strings.TrimPrefix(target, "after ")
-			target = strings.TrimSpace(target)
 			positioned = append(positioned, positionedPatch{patch: p, isBefore: false})
-			_ = target
 		default:
-			fmt.Fprintf(ruleLogWriter, "  ⚠️  RulePatch %q: unknown position %q (use top/bottom/before:X/after:X)\n", p.ID, p.Position)
+			fmt.Fprintf(ruleLogWriter.Load().(logWriterWrapper).writer, "  ⚠️  RulePatch %q: unknown position %q (use top/bottom/before:X/after:X)\n", p.ID, p.Position)
 		}
 	}
 
@@ -453,9 +460,7 @@ func matchesPatchTarget(ruleLine, target string) bool {
 	return strings.Contains(lower, target)
 }
 
-type noopWriter struct{}
-
-func (w *noopWriter) Write(p []byte) (int, error) { return len(p), nil }
+// Remove noopWriter type — using atomic.Value + io.Discard instead.
 
 // Validate checks that the template config is valid.
 func Validate(cfg *Config) []error {
