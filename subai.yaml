@@ -15,9 +15,7 @@ rules: {}
 output:
     target: clash
     pretty: true
-    template: acl4ssr_full
+    template: acl4ssr_online_full_multimode
     fetch_rules: false
     rule_providers: true
-    rule_sets:
-        - group: "🤖 OpenAI"
-          url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml
+    rule_sets: []
