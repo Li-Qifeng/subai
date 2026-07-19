@@ -186,15 +186,23 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 				if len(matched) > 0 {
 					group["proxies"] = matched
 				} else {
-					// No matching proxies for this filter. Leave empty to avoid
-					// showing unrelated nodes (user's choice).
-					// Empty url-test groups are accepted by Clash.
-					group["proxies"] = []string{}
+					// No matching proxies for this filter.
+					// For url-test groups, Clash requires at least one member.
+					// Add ♻️ 自动选择 as fallback so the group is not empty.
+					if pg.Type == "url-test" {
+						group["proxies"] = []string{"♻️ 自动选择"}
+					} else {
+						group["proxies"] = []string{}
+					}
 				}
 			} else {
 				log.Printf("  filter regex compile failed for %q: %v (cleaned: %q)", pg.Name, err, cleanFilter)
-				// Regex failed even after cleaning — leave empty
-				group["proxies"] = []string{}
+				// Regex failed even after cleaning
+				if pg.Type == "url-test" {
+					group["proxies"] = []string{"♻️ 自动选择"}
+				} else {
+					group["proxies"] = []string{}
+				}
 			}
 		}
 
