@@ -1,7 +1,118 @@
-2026/07/20 00:56:15 subai server listening on :8088
-2026/07/20 00:56:15   auto-refresh: every 6h0m0s
-2026/07/20 00:56:15   webhooks: 1 configured
-2026/07/20 00:56:15   output: /root/subai/output/clash.yaml
-2026/07/20 00:56:24 parse source "kitty": unable to detect input format
-2026/07/20 00:57:19 parse source "kitty": unable to detect input format
-2026/07/20 00:59:44 parse source "kitty": unable to detect input format
+2026/07/20 01:04:31 subai server listening on :8088
+2026/07/20 01:04:31   auto-refresh: every 6h0m0s
+2026/07/20 01:04:31   webhooks: 1 configured
+2026/07/20 01:04:31   output: /root/subai/output/clash.yaml
+2026/07/20 01:04:47 parse source "kitty": unable to detect input format
+2026/07/20 01:04:47 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:05:28 parse source "kitty": unable to detect input format
+2026/07/20 01:05:28 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:05:47 parse source "kitty": unable to detect input format
+2026/07/20 01:05:47 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:06:31 parse source "kitty": unable to detect input format
+2026/07/20 01:06:31 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:07:04 parse source "kitty": unable to detect input format
+2026/07/20 01:07:04 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:12:08 parse source "kitty": unable to detect input format
+2026/07/20 01:12:08 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:12:52 parse source "kitty": unable to detect input format
+2026/07/20 01:12:52 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:14:07 parse source "kitty": unable to detect input format
+2026/07/20 01:14:07 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:14:12 parse source "xfltd": unable to detect input format
+2026/07/20 01:14:12   using cached 20 proxies for "xfltd"
+2026/07/20 01:14:12   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 01:47:02 parse source "kitty": unable to detect input format
+2026/07/20 01:47:02 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 01:47:08 parse source "xfltd": unable to detect input format
+2026/07/20 01:47:08   using cached 20 proxies for "xfltd"
+2026/07/20 01:47:08   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:01:37 parse source "kitty": unable to detect input format
+2026/07/20 02:01:37 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:01:43 parse source "xfltd": unable to detect input format
+2026/07/20 02:01:43   using cached 20 proxies for "xfltd"
+2026/07/20 02:01:43   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:01:52 parse source "kitty": unable to detect input format
+2026/07/20 02:01:52 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:01:55 parse source "xfltd": unable to detect input format
+2026/07/20 02:01:55   using cached 20 proxies for "xfltd"
+2026/07/20 02:01:55   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:02:12 parse source "kitty": unable to detect input format
+2026/07/20 02:02:12 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:02:14 parse source "xfltd": unable to detect input format
+2026/07/20 02:02:14   using cached 20 proxies for "xfltd"
+2026/07/20 02:02:14   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:02:24 parse source "kitty": unable to detect input format
+2026/07/20 02:02:24 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:02:28 parse source "xfltd": unable to detect input format
+2026/07/20 02:02:28   using cached 20 proxies for "xfltd"
+2026/07/20 02:02:28   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:03:23 parse source "kitty": unable to detect input format
+2026/07/20 02:03:23 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:03:27 parse source "xfltd": unable to detect input format
+2026/07/20 02:03:27   using cached 20 proxies for "xfltd"
+2026/07/20 02:03:27   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:04:49 parse source "kitty": unable to detect input format
+2026/07/20 02:04:49 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:04:49 parse source "kitty": unable to detect input format
+2026/07/20 02:04:49 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:04:53 parse source "xfltd": unable to detect input format
+2026/07/20 02:04:53   using cached 20 proxies for "xfltd"
+2026/07/20 02:04:53   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:04:53 parse source "xfltd": unable to detect input format
+2026/07/20 02:04:53   using cached 20 proxies for "xfltd"
+2026/07/20 02:04:53   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:04:57 parse source "kitty": unable to detect input format
+2026/07/20 02:04:57 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:05:00 parse source "xfltd": unable to detect input format
+2026/07/20 02:05:00   using cached 20 proxies for "xfltd"
+2026/07/20 02:05:00   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:05:03 parse source "kitty": unable to detect input format
+2026/07/20 02:05:03 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:05:06 parse source "xfltd": unable to detect input format
+2026/07/20 02:05:06   using cached 20 proxies for "xfltd"
+2026/07/20 02:05:06   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:05:12 parse source "kitty": unable to detect input format
+2026/07/20 02:05:12 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:05:14 parse source "xfltd": unable to detect input format
+2026/07/20 02:05:14   using cached 20 proxies for "xfltd"
+2026/07/20 02:05:14   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:05:21 parse source "kitty": unable to detect input format
+2026/07/20 02:05:21 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:05:24 parse source "xfltd": unable to detect input format
+2026/07/20 02:05:24   using cached 20 proxies for "xfltd"
+2026/07/20 02:05:24   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:05:32 parse source "kitty": unable to detect input format
+2026/07/20 02:05:32 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:05:34 parse source "xfltd": unable to detect input format
+2026/07/20 02:05:34   using cached 20 proxies for "xfltd"
+2026/07/20 02:05:34   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:05:47 parse source "kitty": unable to detect input format
+2026/07/20 02:05:47 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:05:49 parse source "xfltd": unable to detect input format
+2026/07/20 02:05:49   using cached 20 proxies for "xfltd"
+2026/07/20 02:05:49   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:05:59 parse source "kitty": unable to detect input format
+2026/07/20 02:05:59 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:06:01 parse source "xfltd": unable to detect input format
+2026/07/20 02:06:01   using cached 20 proxies for "xfltd"
+2026/07/20 02:06:01   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:06:03 parse source "kitty": unable to detect input format
+2026/07/20 02:06:03 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:06:07 parse source "xfltd": unable to detect input format
+2026/07/20 02:06:07   using cached 20 proxies for "xfltd"
+2026/07/20 02:06:07   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:06:14 parse source "kitty": unable to detect input format
+2026/07/20 02:06:14 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:06:16 parse source "xfltd": unable to detect input format
+2026/07/20 02:06:16   using cached 20 proxies for "xfltd"
+2026/07/20 02:06:16   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:06:20 parse source "kitty": unable to detect input format
+2026/07/20 02:06:20 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:06:22 parse source "xfltd": unable to detect input format
+2026/07/20 02:06:22   using cached 20 proxies for "xfltd"
+2026/07/20 02:06:22   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 02:06:34 parse source "kitty": unable to detect input format
+2026/07/20 02:06:34 cache: parse raw cache for "kitty": unable to detect input format
+2026/07/20 02:06:37 parse source "xfltd": unable to detect input format
+2026/07/20 02:06:37   using cached 20 proxies for "xfltd"
+2026/07/20 02:06:37   ⚠️  source "xfltd": using stale cache (20 proxies)

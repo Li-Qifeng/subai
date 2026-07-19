@@ -488,6 +488,11 @@ func (s *Server) renderClashBytes(cfg *config.Config, proxies parser.ProxyList) 
 	}
 
 	// Fallback to simple inline renderer
+	clashProxies := make([]map[string]interface{}, len(proxies))
+	for i, p := range proxies {
+		clashProxies[i] = p.ToClashProxy()
+	}
+
 	out := map[string]interface{}{
 		"port":                7890,
 		"socks-port":          7891,
@@ -495,7 +500,7 @@ func (s *Server) renderClashBytes(cfg *config.Config, proxies parser.ProxyList) 
 		"mode":                "Rule",
 		"log-level":           "info",
 		"external-controller": "127.0.0.1:9090",
-		"proxies":             proxies,
+		"proxies":             clashProxies,
 	}
 
 	if len(proxies) > 0 {

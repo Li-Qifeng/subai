@@ -87,6 +87,12 @@ func (e *Engine) Convert(proxies []parser.Proxy, target string) ([]byte, error) 
 
 // toClash generates a Clash-compatible YAML with template-based proxy groups and rules.
 func (e *Engine) toClash(proxies []parser.Proxy) ([]byte, error) {
+	// Convert proxies to Clash-compatible format (fix Reality field names)
+	clashProxies := make([]map[string]interface{}, len(proxies))
+	for i, p := range proxies {
+		clashProxies[i] = p.ToClashProxy()
+	}
+
 	out := map[string]interface{}{
 		"port":                 7890,
 		"socks-port":           7891,
@@ -94,7 +100,7 @@ func (e *Engine) toClash(proxies []parser.Proxy) ([]byte, error) {
 		"mode":                 "Rule",
 		"log-level":            "info",
 		"external-controller":  "127.0.0.1:9090",
-		"proxies":              proxies,
+		"proxies":              clashProxies,
 	}
 
 	// Build from template
