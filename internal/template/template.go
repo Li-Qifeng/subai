@@ -283,26 +283,57 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 	// Enrich service group members: add all region groups + 自动选择 to select groups
 	// that only have one member (like only 🚀 手动选择). This matches the Aethersailor
 	// reference output where each service group offers all region groups as options.
-	enrichProxyGroups(result)
+	enrichProxyGroups(result, allNames)
 
 	return result
 }
 
-// enrichProxyGroups adds all region group names to service groups that have
-// only one member (typically just 🚀 手动选择), so users can select any region
-// directly from each service group.
-func enrichProxyGroups(result *BuildResult) {
+// enrichProxyGroups adds all region group names to service groups, and
+// handles the 其他地区 group by computing unmatched proxies via post-processing.
+func enrichProxyGroups(result *BuildResult, allNames []string) {
 	// Collect all url-test group names (except ♻️ 自动选择)
 	var allRegionNames []string
-	for _, g := range result.ProxyGroups {
+	var otherRegionIdx int = -1
+	for i, g := range result.ProxyGroups {
 		name, _ := g["name"].(string)
 		gtype, _ := g["type"].(string)
 		if gtype == "url-test" && name != "♻️ 自动选择" {
 			allRegionNames = append(allRegionNames, name)
+			if name == "🌐 其他地区" {
+				otherRegionIdx = i
+			}
 		}
 	}
 	if len(allRegionNames) == 0 {
 		return
+	}
+
+	// Handle 其他地区: compute unmatched proxies from all other region groups
+	if otherRegionIdx >= 0 {
+		otherGroup := result.ProxyGroups[otherRegionIdx]
+		// Collect all proxy names matched by any other region group
+		matched := make(map[string]bool)
+		for _, g := range result.ProxyGroups {
+			name, _ := g["name"].(string)
+			gtype, _ := g["type"].(string)
+			if gtype == "url-test" && name != "♻️ 自动选择" && name != "🌐 其他地区" {
+				for _, p := range g["proxies"].([]string) {
+					matched[p] = true
+				}
+			}
+		}
+		// 其他地区 = all proxies - proxies matched by other region groups
+		var unmatched []string
+		for _, p := range allNames {
+			if !matched[p] {
+				unmatched = append(unmatched, p)
+			}
+		}
+		if len(unmatched) > 0 {
+			otherGroup["proxies"] = unmatched
+		} else {
+			otherGroup["proxies"] = []string{}
+		}
 	}
 
 	// Enrich select-type service groups that have only 1 member
