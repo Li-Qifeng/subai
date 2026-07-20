@@ -250,6 +250,11 @@ func (s *Server) refreshAndNotify() {
 	// Fetch and parse all sources with cache fallback
 	var allProxies parser.ProxyList
 	for _, src := range cfg.Sources {
+		// Skip disabled sources
+		if src.Enabled != nil && !*src.Enabled {
+			log.Printf("  ⏭️  source %q: disabled, skipping", src.Name)
+			continue
+		}
 		proxies, stale := s.fetchWithFallback(src)
 		if len(proxies) == 0 {
 			continue
@@ -398,6 +403,10 @@ func (s *Server) handleSub(w http.ResponseWriter, r *http.Request) {
 	// 2. Fetch and parse each source with cache fallback
 	var allProxies parser.ProxyList
 	for _, src := range cfg.Sources {
+		// Skip disabled sources
+		if src.Enabled != nil && !*src.Enabled {
+			continue
+		}
 		proxies, stale := s.fetchWithFallback(src)
 		if len(proxies) == 0 {
 			continue

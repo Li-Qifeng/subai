@@ -4,634 +4,615 @@ log-level: info
 mode: Rule
 port: 7890
 proxies:
-    - name: GB-London-h-51415624-hvdg
+    - name: RO-Bucharest-2394920-eqqn
+      port: 9002
+      server: 84.239.49.202
       type: http
-      server: ff28cfb9-t9zts0-tiaexf-ufc0.uk.oshuawei.com
-      port: 443
-      password: 22308988-8548-11ea-a22e-f23c91cfbbc9
-      username: 22308988-8548-11ea-a22e-f23c91cfbbc9
-    - name: GB-Erith-h-8922913-hyfy
-      type: vless
-      server: 77.110.113.188
-      port: 443
-      uuid: 218fd696-e3a2-4c33-b397-a5f13a82969e
-      sni: www.samsung.com
+    - client-fingerprint: qq
+      flow: xtls-rprx-vision
+      name: RO-Bucharest-51331952-euev
       network: tcp
-      fingerprint: qq
-      public-key: 4e4FI0siWxFtLCRCVDQurn1wLTuvKWhRY0zj1SaUcyw
-      short-id: 1559b440
-      security: reality
-    - name: SG-Singapore-4281632-hyyi
+      port: 59978
+      reality-opts:
+        public-key: zU3_YlbtgNxg4_mPQzmz3aBCET3vUNbBMYrEztVFs0Q
+        short-id: c3a0d1
+      server: 195.58.49.41
+      servername: ymail.com
+      tls: true
       type: vless
-      server: 150.109.11.223
-      port: 443
-      uuid: f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      sni: s5gydl.936.us.ci
-      network: ws
-      ws-path: /proxyip=tw.william.us.ci?uuid=f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      ws-headers:
-        Host: s5gydl.936.us.ci
-      fingerprint: chrome
-      security: tls
-    - name: SG-Singapore-7925311-hhgi
-      type: socks5
-      server: 47.79.253.110
-      port: 3080
-    - name: US-New York City-6146591-hygd
-      type: http
-      server: 156.146.59.16
+      uuid: 1136f25a-4925-4ba6-9620-771dd9553f92
+    - name: RO-Bucharest-239495-eqqe
       port: 9002
-    - name: US-Los Angeles-81993520-hfhh
+      server: 84.239.49.55
       type: http
-      server: 138.199.35.200
+    - name: RO-Bucharest-3176842-eqvj
       port: 9002
-    - name: US-San Jose-42815217-hoay
-      type: vless
-      server: 104.245.12.217
-      port: 8443
-      uuid: f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      sni: s5gydl.936.us.ci
-      network: ws
-      ws-path: /proxyip=tw.william.us.ci?uuid=f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      ws-headers:
-        Host: s5gydl.936.us.ci
-      fingerprint: chrome
-      security: tls
-    - name: US-Los Angeles-81993521-hhal
+      server: 193.176.84.25
       type: http
-      server: 138.199.35.218
+    - name: RO-Bucharest-2394921-eqjb
       port: 9002
-    - name: RO-Bucharest-2394920-hovl
+      server: 84.239.49.211
       type: http
-      server: 84.239.49.209
+    - name: RO-Bucharest-3176842-eqmq
       port: 9002
-    - name: US-Los Angeles-81993519-hygv
+      server: 193.176.84.24
       type: http
-      server: 138.199.35.197
+    - name: RO-Bucharest-3176842-eqii
       port: 9002
-    - name: PL-Warsaw-4591863-hyvd
-      type: socks5
-      server: 194.59.186.35
-      port: 1080
-    - name: RO-Bucharest-3176843-hfaa
+      server: 193.176.84.23
       type: http
-      server: 193.176.84.36
-      port: 9002
-    - name: NL-Amsterdam-174714-hhaf
-      type: http
-      server: 84.17.47.148
-      port: 9002
-    - name: RO-Bucharest-2394915-hfah
-      type: http
-      server: 84.239.49.154
-      port: 9002
-    - name: JP-Tokyo-2871948-hydv
-      type: socks5
-      server: 112.28.149.156
-      port: 8443
-    - name: US-Los Angeles-81993521-hfho
-      type: http
-      server: 138.199.35.216
-      port: 9002
-    - name: US-Los Angeles-81993520-hygh
-      type: http
-      server: 138.199.35.207
-      port: 9002
-    - name: GB-Erith-h-8922913-hyhi
-      type: vless
-      server: 77.110.113.188
-      port: 443
-      uuid: 218fd696-e3a2-4c33-b397-a5f13a82969e
-      sni: www.samsung.com
-      network: tcp
-      fingerprint: qq
-      public-key: 4e4FI0siWxFtLCRCVDQurn1wLTuvKWhRY0zj1SaUcyw
-      short-id: 1559b440
-      security: reality
-    - name: GB-London-h-325524617-hogy
-      type: http
-      server: 6d74a01e-thrgg0-thri9q-azvy.cldvpuk.cdnbytescm.com
-      port: 443
-      password: a95e9198-0671-11f0-9426-f23c932f2c32
-      username: a95e9198-0671-11f0-9426-f23c932f2c32
-    - name: RO-Bucharest-2394917-hfgy
-      type: http
-      server: 84.239.49.176
-      port: 9002
-    - name: DE-Frankfurt am Main-h-1595320-hhgo
-      type: ss
-      server: 18.159.53.205
-      port: 443
-      cipher: aes-256-cfb
-      password: amazonskr05
-    - name: US-Los Angeles-81993520-hyda
-      type: http
-      server: 138.199.35.203
-      port: 9002
-    - name: RO-Bucharest-2394919-hyal
-      type: http
-      server: 84.239.49.194
-      port: 9002
-    - name: KR-Yongin-si (Cheoin-gu)-11694611-hoad
-      type: socks5
-      server: 121.169.46.116
-      port: 1090
-      username: Og%3D%3D
-    - name: KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-      type: socks5
-      server: 121.169.46.116
-      port: 1090
-      username: VDJjbE0wUWxNMFE2Og==
-    - name: RO-Bucharest-2394916-hflv
-      type: http
-      server: 84.239.49.166
-      port: 9002
-    - name: SG-Singapore-791737-hydo
-      type: http
-      server: 51.79.173.71
-      port: 443
-    - name: US-Los Angeles-28193-hhlh
-      type: http
-      server: 38.28.193.1
-      port: 443
-    - name: HK-Hong Kong-4281635-hyyl
-      type: vless
-      server: 91.110.209.88
-      port: 443
-      uuid: f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      sni: s5gydl.936.us.ci
-      network: ws
-      ws-path: /proxyip=tw.william.us.ci?uuid=f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      ws-headers:
-        Host: s5gydl.936.us.ci
-      fingerprint: chrome
-      security: tls
-    - name: RO-Bucharest-2394916-hyog
-      type: http
-      server: 84.239.49.160
-      port: 9002
-    - name: RO-Bucharest-2394917-hfll
-      type: http
-      server: 84.239.49.173
-      port: 9002
-    - name: GB-London-h-325524617-hyaa
-      type: http
-      server: a2e7ab8a-thvs00-ths4hq-azvy.cldvpuk.cdnbytescm.com
-      port: 443
-      password: a95e9198-0671-11f0-9426-f23c932f2c32
-      username: a95e9198-0671-11f0-9426-f23c932f2c32
-    - name: RO-Bucharest-2394922-hfli
-      type: http
-      server: 84.239.49.225
-      port: 9002
-    - name: KR-Seoul-42815625-holh
-      type: vless
-      server: 123.111.169.70
-      port: 2087
-      uuid: f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      sni: s5gydl.936.us.ci
-      network: ws
-      ws-path: /proxyip=tw.william.us.ci?uuid=f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      ws-headers:
-        Host: s5gydl.936.us.ci
-      fingerprint: chrome
-      security: tls
-    - name: DE-Frankfurt am Main-h-771299-hhld
-      type: hysteria2
-      server: ge01.auragg.org
-      port: 443
-      password: b05346a9-4d13-41a4-8d2a-6b7b64e73ffc
-      sni: ge01.auragg.org
-    - name: US-New York City-6146594-hyfl
-      type: http
-      server: 156.146.59.46
-      port: 9002
-    - name: CA-Ville-Marie-711417220-hyfo
-      type: socks5
-      server: 167.114.172.208
+    - name: US-North Bergen-4482913-exmm
       port: 1088
-    - name: JP-Narita-4281629-hyvf
-      type: vless
-      server: 212.135.210.88
-      port: 443
-      uuid: f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      sni: s5gydl.936.us.ci
-      network: ws
-      ws-path: /proxyip=tw.william.us.ci?uuid=f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      ws-headers:
-        Host: s5gydl.936.us.ci
-      fingerprint: chrome
-      security: tls
-    - name: GB-London-h-325524617-hyvl
-      type: http
-      server: 408ce027-thv5s0-thri9q-azvy.cldvpuk.cdnbytescm.com
-      port: 443
-      password: a95e9198-0671-11f0-9426-f23c932f2c32
-      username: a95e9198-0671-11f0-9426-f23c932f2c32
-    - name: RO-Bucharest-2394921-hydi
-      type: http
-      server: 84.239.49.212
-      port: 9002
-    - name: PL-Warsaw-3681104-hhgh
-      type: hysteria2
-      server: pipe-4854.internet-booster.com
-      port: 443
-      password: 000081e1-c607-495c-b072-195323fa1113
-      sni: pipe-4854.internet-booster.com
-    - name: KR-Seoul-42815624-hoga
-      type: vless
-      server: 43.155.221.27
-      port: 8443
-      uuid: f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      sni: s5gydl.936.us.ci
-      network: ws
-      ws-path: /proxyip=tw.william.us.ci?uuid=f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      ws-headers:
-        Host: s5gydl.936.us.ci
-      fingerprint: chrome
-      security: tls
-    - name: DE-Frankfurt am Main-01011095-hygi
-      type: vless
-      server: 5.129.194.34
-      port: 4100
-      uuid: 9b44bfb4-9d28-4870-9fc3-5154d6d462ff
-      network: ws
-      ws-path: /v1
-      ws-headers:
-        Host: live.ok.ru
-      security: none
-    - name: HK-Hong Kong-42815719-hygg
-      type: vless
-      server: 172.67.76.195
-      port: 2096
-      uuid: 663cf772-829c-4bc6-893d-b7d021d42f5b
-      sni: vp7.cc.cd
-      network: ws
-      ws-path: /
-      ws-headers:
-        Host: vp7.cc.cd
-      fingerprint: chrome
-      security: tls
-    - name: CH-Lancy-2282103-hhgl
-      type: vless
-      server: ch03.tunnely.ru
-      port: 443
-      uuid: 31649657-6c78-4c2c-b25b-5cd574b082b5
-      flow: xtls-rprx-vision
-      sni: ch03.tunnely.ru
-      network: tcp
-      fingerprint: firefox
-      public-key: pPGE5Uacj1AGAB_WLOXB_UUnVBOmuJGH0vTSfmRBKzM
-      short-id: 2e40144ddc07e8e1
-      security: reality
-    - name: US-Dallas-2384211-hfva
+      server: 204.48.29.137
       type: socks5
-      server: 185.145.99.41
-      port: 1080
-      password: test123
-      username: test123
-    - name: US-Los Angeles-81993520-hhao
-      type: http
-      server: 138.199.35.209
+    - name: RO-Bucharest-2394921-eqbj
       port: 9002
-    - name: RO-Bucharest-2394917-hoov
+      server: 84.239.49.219
       type: http
-      server: 84.239.49.170
-      port: 9002
-    - name: KR-Seolcheon-428157-holv
+    - client-fingerprint: qq
+      flow: xtls-rprx-vision
+      name: NL-Rotterdam-h-04918519-exin
+      network: tcp
+      port: 8449
+      reality-opts:
+        public-key: GfqgzbK4AJjj_Icckn1KYTWJirFpTZwGS7obnf2K2CU
+        short-id: 63df86ce481f7a52
+      server: 201.51.12.234
+      servername: site.rumedia-cdn.com
+      tls: true
       type: vless
-      server: 123.111.169.70
+      uuid: 61a41eba-ae07-4394-939b-335310955047
+    - name: ZA-Johannesburg-915116019-exjm
       port: 443
-      uuid: f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      sni: s5gydl.936.us.ci
-      network: ws
-      ws-path: /proxyip=tw.william.us.ci?uuid=f4e91fac-25eb-4d26-a14c-c82c3778a0e4
-      ws-headers:
-        Host: s5gydl.936.us.ci
-      fingerprint: chrome
-      security: tls
-    - name: US-Los Angeles-81993522-hhay
+      server: 129.151.160.199
       type: http
-      server: 138.199.35.220
+    - name: RO-Bucharest-3176842-exnj
       port: 9002
-    - name: "🇭🇰 香港 01 [V]"
+      server: 193.176.84.24
+      type: http
+    - name: US-East Los Angeles-4281655-exib
+      network: ws
+      port: 443
+      security: tls
+      server: 104.18.40.189
+      sni: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
       type: vless
-      server: 0af4430.cnrcz.cn
+      uuid: 68eee13f-1a7a-4761-b71e-83b997eeccf9
+      ws-headers:
+        Host: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      ws-path: /glasspanel/guest000_0_5de14443985f/
+    - name: RO-Bucharest-2394922-exnn
+      port: 9002
+      server: 84.239.49.229
+      type: http
+    - name: RO-Bucharest-2394922-exnv
+      port: 9002
+      server: 84.239.49.223
+      type: http
+    - name: RO-Bucharest-3176841-equb
+      port: 9002
+      server: 193.176.84.17
+      type: http
+    - name: RO-Bucharest-2394921-exbq
+      port: 9002
+      server: 84.239.49.212
+      type: http
+    - name: RO-Bucharest-2394921-eqvn
+      port: 9002
+      server: 84.239.49.215
+      type: http
+    - name: US-New York City-6146594-exbj
+      port: 9002
+      server: 156.146.59.45
+      type: http
+    - name: RO-Sector 2-2391416-eqev
+      port: 9002
+      server: 84.239.14.160
+      type: http
+    - name: RO-Bucharest-2394918-eqxb
+      port: 9002
+      server: 84.239.49.189
+      type: http
+    - name: US-New York City-6146594-exbe
+      port: 9002
+      server: 156.146.59.41
+      type: http
+    - name: RO-Bucharest-2394918-eqen
+      port: 9002
+      server: 84.239.49.187
+      type: http
+    - name: US-East Los Angeles-4281655-exmb
+      network: ws
+      port: 443
+      security: tls
+      server: 104.19.220.22
+      sni: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      type: vless
+      uuid: 68eee13f-1a7a-4761-b71e-83b997eeccf9
+      ws-headers:
+        Host: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      ws-path: /glasspanel/f5cbe9c3_0_4dd3a8f42f09/
+    - name: RO-Bucharest-2394919-eqjv
+      port: 9002
+      server: 84.239.49.191
+      type: http
+    - name: RO-Bucharest-2394917-eqeq
+      port: 9002
+      server: 84.239.49.175
+      type: http
+    - name: RO-Bucharest-2394916-eqmn
+      port: 9002
+      server: 84.239.49.164
+      type: http
+    - name: US-New York City-614659-exnx
+      port: 9002
+      server: 156.146.59.5
+      type: http
+    - name: RO-Bucharest-2394925-eqjj
+      port: 9002
+      server: 84.239.49.253
+      type: http
+    - name: RO-Bucharest-3176842-eqvv
+      port: 9002
+      server: 193.176.84.20
+      type: http
+    - name: RO-Bucharest-2394919-eqxe
+      port: 9002
+      server: 84.239.49.196
+      type: http
+    - name: US-East Los Angeles-42815211-euqm
+      network: ws
+      port: 443
+      security: tls
+      server: 104.16.249.151
+      sni: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      type: vless
+      uuid: 68eee13f-1a7a-4761-b71e-83b997eeccf9
+      ws-headers:
+        Host: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      ws-path: /glasspanel/f5cbe9c3_0_4dd3a8f42f09/
+    - name: NL-Amsterdam-174714-evbu
+      port: 9002
+      server: 84.17.47.149
+      type: http
+    - name: NL-Amsterdam-412423220-evju
+      port: 1080
+      server: 144.124.232.204
+      type: socks5
+    - name: RO-Bucharest-2394925-evji
+      port: 9002
+      server: 84.239.49.251
+      type: http
+    - name: NL-Haarlem-15922519-evjb
+      port: 23856
+      server: 51.159.225.196
+      type: http
+    - name: RO-Sector 2-2391414-eqxm
+      port: 9002
+      server: 84.239.14.147
+      type: http
+    - name: RO-Bucharest-2394918-evje
+      port: 9002
+      server: 84.239.49.180
+      type: http
+    - name: RO-Bucharest-2394922-emmv
+      port: 9002
+      server: 84.239.49.228
+      type: http
+    - name: US-East Los Angeles-4281655-euqi
+      network: ws
+      port: 443
+      security: tls
+      server: 104.17.58.157
+      sni: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      type: vless
+      uuid: 68eee13f-1a7a-4761-b71e-83b997eeccf9
+      ws-headers:
+        Host: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      ws-path: /glasspanel/f5cbe9c3_0_4dd3a8f42f09/
+    - name: RO-Bucharest-3176843-eujv
+      port: 9002
+      server: 193.176.84.39
+      type: http
+    - name: PL-Warsaw-3681104-euie
+      password: 000081e1-c607-495c-b072-195323fa1113
+      port: 443
+      server: pipe-4854.internet-booster.com
+      sni: pipe-4854.internet-booster.com
+      type: hysteria2
+    - name: ES-Jaca-04910-emqn
+      port: 18500
+      server: 81.0.49.104
+      type: socks5
+    - name: RO-Bucharest-2394915-exbm
+      port: 9002
+      server: 84.239.49.156
+      type: http
+    - name: NL-Amsterdam-174714-eqje
+      port: 9002
+      server: 84.17.47.146
+      type: http
+    - name: RO-Bucharest-239494-exne
+      port: 9002
+      server: 84.239.49.43
+      type: http
+    - name: RO-Bucharest-239495-evee
+      port: 9002
+      server: 84.239.49.58
+      type: http
+    - name: US-East Los Angeles-42815822-exix
+      network: ws
+      port: 443
+      security: tls
+      server: 104.18.35.225
+      sni: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      type: vless
+      uuid: 68eee13f-1a7a-4761-b71e-83b997eeccf9
+      ws-headers:
+        Host: hh3md.6zkk.2p8.hh.hhyf.kdns.fr
+      ws-path: /glasspanel/guest000_0_5de14443985f/
+    - name: RO-Bucharest-239495-equu
+      port: 9002
+      server: 84.239.49.54
+      type: http
+    - name: US-New York City-614659-euju
+      port: 9002
+      server: 156.146.59.4
+      type: http
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇭🇰 香港 01 [V]"
+      network: tcp
       port: 10001
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.lamer.com.hk
-      network: tcp
-      fingerprint: chrome
-      public-key: YHK42ZPjtRcfqsW44dqqg-uIKmWjqIs_jNNhtC6O2EI
-      short-id: 11f2f1fe
-      security: reality
-    - name: "🇭🇰 香港 02 [V]"
-      type: vless
+      reality-opts:
+        public-key: YHK42ZPjtRcfqsW44dqqg-uIKmWjqIs_jNNhtC6O2EI
+        short-id: 11f2f1fe
       server: 0af4430.cnrcz.cn
+      servername: www.lamer.com.hk
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇭🇰 香港 02 [V]"
+      network: tcp
       port: 10002
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.lamer.com.hk
-      network: tcp
-      fingerprint: chrome
-      public-key: 4VQj4PpXelXza294Fm7b6oG8q6mvV6pzZEu7a8L0S0o
-      short-id: a230d2fe
-      security: reality
-    - name: "🇭🇰 香港 03 [V]"
-      type: vless
+      reality-opts:
+        public-key: 4VQj4PpXelXza294Fm7b6oG8q6mvV6pzZEu7a8L0S0o
+        short-id: a230d2fe
       server: 0af4430.cnrcz.cn
+      servername: www.lamer.com.hk
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇭🇰 香港 03 [V]"
+      network: tcp
       port: 10003
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.lamer.com.hk
-      network: tcp
-      fingerprint: chrome
-      public-key: fuEyobJ83IqBxOpiUMHhP0JybvHjuwODAMhbawzehDE
-      short-id: "14174953"
-      security: reality
-    - name: "🇭🇰 香港 04 [V]"
-      type: vless
+      reality-opts:
+        public-key: fuEyobJ83IqBxOpiUMHhP0JybvHjuwODAMhbawzehDE
+        short-id: "14174953"
       server: 0af4430.cnrcz.cn
+      servername: www.lamer.com.hk
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇭🇰 香港 04 [V]"
+      network: tcp
       port: 10004
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.lamer.com.hk
-      network: tcp
-      fingerprint: chrome
-      public-key: TYe_e0pqEjM9dukjqZK1nVVbioDBWeJ4DQAa-SlkiFw
-      short-id: 4ff7256f
-      security: reality
-    - name: "🇭🇰 香港 05 [V]"
-      type: vless
+      reality-opts:
+        public-key: TYe_e0pqEjM9dukjqZK1nVVbioDBWeJ4DQAa-SlkiFw
+        short-id: 4ff7256f
       server: 0af4430.cnrcz.cn
+      servername: www.lamer.com.hk
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇭🇰 香港 05 [V]"
+      network: tcp
       port: 10005
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.lamer.com.hk
-      network: tcp
-      fingerprint: chrome
-      public-key: EYThQcmagrBf9NpXLcAfYuzd0q87WbBFnp0evpN4Dhk
-      short-id: 76a3105f
-      security: reality
-    - name: "🇸🇬 新加坡 01 [V]"
-      type: vless
+      reality-opts:
+        public-key: EYThQcmagrBf9NpXLcAfYuzd0q87WbBFnp0evpN4Dhk
+        short-id: 76a3105f
       server: 0af4430.cnrcz.cn
+      servername: www.lamer.com.hk
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇸🇬 新加坡 01 [V]"
+      network: tcp
       port: 13001
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.lamer.com.sg
-      network: tcp
-      fingerprint: chrome
-      public-key: cLwilWcX2UjbVFZh_V3WrS4y7zAsCS1HduOsu3ivBkg
-      short-id: 64af2805
-      security: reality
-    - name: "🇸🇬 新加坡 02 [V]"
-      type: vless
+      reality-opts:
+        public-key: cLwilWcX2UjbVFZh_V3WrS4y7zAsCS1HduOsu3ivBkg
+        short-id: 64af2805
       server: 0af4430.cnrcz.cn
+      servername: www.lamer.com.sg
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇸🇬 新加坡 02 [V]"
+      network: tcp
       port: 13002
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.lamer.com.sg
-      network: tcp
-      fingerprint: chrome
-      public-key: 16c5tfYMztQthAjs1Bl28MIASVDkNlvUalLlxf_jnV4
-      short-id: d6e74126
-      security: reality
-    - name: "🇸🇬 新加坡 03 [V]"
-      type: vless
+      reality-opts:
+        public-key: 16c5tfYMztQthAjs1Bl28MIASVDkNlvUalLlxf_jnV4
+        short-id: d6e74126
       server: 0af4430.cnrcz.cn
+      servername: www.lamer.com.sg
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇸🇬 新加坡 03 [V]"
+      network: tcp
       port: 13003
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: iosapps.itunes.apple.com
-      network: tcp
-      fingerprint: chrome
-      public-key: DamhgWToqblckhwttSprN2Mc_KZM-RdlGg2G8uK0HxY
-      short-id: a2551ca0
-      security: reality
-    - name: "🇸🇬 新加坡 04 [V]"
-      type: vless
+      reality-opts:
+        public-key: DamhgWToqblckhwttSprN2Mc_KZM-RdlGg2G8uK0HxY
+        short-id: a2551ca0
       server: 0af4430.cnrcz.cn
+      servername: iosapps.itunes.apple.com
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇸🇬 新加坡 04 [V]"
+      network: tcp
       port: 13004
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: iosapps.itunes.apple.com
-      network: tcp
-      fingerprint: chrome
-      public-key: -D3Pwn88Jtxrs9NNcLMc-rdxiDJu98chMqZE-0ZmGwU
-      short-id: e5f610bc
-      security: reality
-    - name: "🇸🇬 新加坡 05 [V]"
-      type: vless
+      reality-opts:
+        public-key: -D3Pwn88Jtxrs9NNcLMc-rdxiDJu98chMqZE-0ZmGwU
+        short-id: e5f610bc
       server: 0af4430.cnrcz.cn
+      servername: iosapps.itunes.apple.com
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇸🇬 新加坡 05 [V]"
+      network: tcp
       port: 13005
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: iosapps.itunes.apple.com
-      network: tcp
-      fingerprint: chrome
-      public-key: DuD8VlzsSjzL7ZwMV7rP6NsFJyV6CsQ5RjXB7yHbQXc
-      short-id: bc30e89c
-      security: reality
-    - name: "🇯🇵 日本 01 [V]"
-      type: vless
+      reality-opts:
+        public-key: DuD8VlzsSjzL7ZwMV7rP6NsFJyV6CsQ5RjXB7yHbQXc
+        short-id: bc30e89c
       server: 0af4430.cnrcz.cn
+      servername: iosapps.itunes.apple.com
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇯🇵 日本 01 [V]"
+      network: tcp
       port: 14001
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.apple.com.cn
-      network: tcp
-      fingerprint: chrome
-      public-key: kv7zN1zuTbwl2WxqO_LYtrLYc_CybyHvTrKlRNymGTU
-      short-id: e4ada79a
-      security: reality
-    - name: "🇯🇵 日本 02 [V]"
-      type: vless
+      reality-opts:
+        public-key: kv7zN1zuTbwl2WxqO_LYtrLYc_CybyHvTrKlRNymGTU
+        short-id: e4ada79a
       server: 0af4430.cnrcz.cn
+      servername: www.apple.com.cn
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇯🇵 日本 02 [V]"
+      network: tcp
       port: 14002
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.apple.com.cn
-      network: tcp
-      fingerprint: chrome
-      public-key: ojNmqgE7GKnMfA3s7hLzj85gMAKAegRcDzvjdVHweXQ
-      short-id: e855ae22
-      security: reality
-    - name: "🇯🇵 日本 03 [V]"
-      type: vless
+      reality-opts:
+        public-key: ojNmqgE7GKnMfA3s7hLzj85gMAKAegRcDzvjdVHweXQ
+        short-id: e855ae22
       server: 0af4430.cnrcz.cn
+      servername: www.apple.com.cn
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇯🇵 日本 03 [V]"
+      network: tcp
       port: 14003
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.apple.com.cn
-      network: tcp
-      fingerprint: chrome
-      public-key: ZlUrL88N-JYrYK4KfZv_wLT60dt1NPraiw3rsF3XLS8
-      short-id: 0be77bcd
-      security: reality
-    - name: "🇯🇵 日本 04 [V]"
-      type: vless
+      reality-opts:
+        public-key: ZlUrL88N-JYrYK4KfZv_wLT60dt1NPraiw3rsF3XLS8
+        short-id: 0be77bcd
       server: 0af4430.cnrcz.cn
+      servername: www.apple.com.cn
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇯🇵 日本 04 [V]"
+      network: tcp
       port: 14004
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.apple.com.cn
-      network: tcp
-      fingerprint: chrome
-      public-key: aq1K4KMHdBHhaxKAycKdShHvlLNX30U0v5exrNQNlA8
-      short-id: 8cd779b9
-      security: reality
-    - name: "🇯🇵 日本 05 [V]"
-      type: vless
+      reality-opts:
+        public-key: aq1K4KMHdBHhaxKAycKdShHvlLNX30U0v5exrNQNlA8
+        short-id: 8cd779b9
       server: 0af4430.cnrcz.cn
+      servername: www.apple.com.cn
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇯🇵 日本 05 [V]"
+      network: tcp
       port: 14005
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: www.apple.com.cn
-      network: tcp
-      fingerprint: chrome
-      public-key: WSG0HbFGd4RMLqSWmUF35Mzi_AftExetANW1_FKYNCc
-      short-id: d80768e5
-      security: reality
-    - name: "🇺🇸 美国 01 [V]"
+      reality-opts:
+        public-key: WSG0HbFGd4RMLqSWmUF35Mzi_AftExetANW1_FKYNCc
+        short-id: d80768e5
+      server: 0af4430.cnrcz.cn
+      servername: www.apple.com.cn
+      tls: true
       type: vless
-      server: 33825fa.cnrcz.cn
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇺🇸 美国 01 [V]"
+      network: tcp
       port: 15001
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: download-porter.hoyoverse.com
-      network: tcp
-      fingerprint: chrome
-      public-key: Nr7ZOm0Rb_A1ZOGQyszNWJ30uKBqTaz1_UUtIlkkElc
-      short-id: 38a7ffe3
-      security: reality
-    - name: "🇺🇸 美国 02 [V]"
-      type: vless
+      reality-opts:
+        public-key: Nr7ZOm0Rb_A1ZOGQyszNWJ30uKBqTaz1_UUtIlkkElc
+        short-id: 38a7ffe3
       server: 33825fa.cnrcz.cn
+      servername: download-porter.hoyoverse.com
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇺🇸 美国 02 [V]"
+      network: tcp
       port: 15002
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: download-porter.hoyoverse.com
-      network: tcp
-      fingerprint: chrome
-      public-key: UgPjbq3kb7MwYAgxHh_rLYEksdhR3Q4Mho4M5psaHF0
-      short-id: 13cdcc6b
-      security: reality
-    - name: "🇺🇸 美国 03 [V]"
-      type: vless
+      reality-opts:
+        public-key: UgPjbq3kb7MwYAgxHh_rLYEksdhR3Q4Mho4M5psaHF0
+        short-id: 13cdcc6b
       server: 33825fa.cnrcz.cn
+      servername: download-porter.hoyoverse.com
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇺🇸 美国 03 [V]"
+      network: tcp
       port: 15003
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: download-porter.hoyoverse.com
-      network: tcp
-      fingerprint: chrome
-      public-key: QxcVxTY4NZ78RL__XTJUU06TvCCHdIzHrntCPU4-PHs
-      short-id: 69a45aae
-      security: reality
-    - name: "🇺🇸 美国 04 [V]"
-      type: vless
+      reality-opts:
+        public-key: QxcVxTY4NZ78RL__XTJUU06TvCCHdIzHrntCPU4-PHs
+        short-id: 69a45aae
       server: 33825fa.cnrcz.cn
+      servername: download-porter.hoyoverse.com
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
+    - client-fingerprint: chrome
+      encryption: none
+      flow: xtls-rprx-vision
+      name: "🇺🇸 美国 04 [V]"
+      network: tcp
       port: 15004
-      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
-      encryption: none
-      sni: download-porter.hoyoverse.com
-      network: tcp
-      fingerprint: chrome
-      public-key: NXpAWCTy8Cdos5ilhJqpPb1u-A14WCxGqvuWufXDbBc
-      short-id: f33273b2
-      security: reality
-    - name: "🇨🇦 加拿大 01 [V]"
-      type: vless
+      reality-opts:
+        public-key: NXpAWCTy8Cdos5ilhJqpPb1u-A14WCxGqvuWufXDbBc
+        short-id: f33273b2
       server: 33825fa.cnrcz.cn
-      port: 15005
+      servername: download-porter.hoyoverse.com
+      tls: true
+      type: vless
       uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
-      flow: xtls-rprx-vision
+    - client-fingerprint: chrome
       encryption: none
-      sni: download-porter.hoyoverse.com
+      flow: xtls-rprx-vision
+      name: "🇨🇦 加拿大 01 [V]"
       network: tcp
-      fingerprint: chrome
-      public-key: 6WMKuy1l13XTLXaX2m9nV_S6JYRc8C3FRuAT15Bhkzs
-      short-id: "09561058"
-      security: reality
+      port: 15005
+      reality-opts:
+        public-key: 6WMKuy1l13XTLXaX2m9nV_S6JYRc8C3FRuAT15Bhkzs
+        short-id: "09561058"
+      server: 33825fa.cnrcz.cn
+      servername: download-porter.hoyoverse.com
+      tls: true
+      type: vless
+      uuid: 1f4e1484-37a3-4f4b-8fb2-e8a71f65f3fa
 proxy-groups:
     - name: "🚀 手动选择"
       proxies:
         - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - interval: 300
       name: ♻️ 自动选择
       proxies:
-        - GB-London-h-51415624-hvdg
-        - GB-Erith-h-8922913-hyfy
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - RO-Bucharest-2394920-hovl
-        - US-Los Angeles-81993519-hygv
-        - PL-Warsaw-4591863-hyvd
-        - RO-Bucharest-3176843-hfaa
-        - NL-Amsterdam-174714-hhaf
-        - RO-Bucharest-2394915-hfah
-        - JP-Tokyo-2871948-hydv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - GB-Erith-h-8922913-hyhi
-        - GB-London-h-325524617-hogy
-        - RO-Bucharest-2394917-hfgy
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - US-Los Angeles-81993520-hyda
-        - RO-Bucharest-2394919-hyal
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - RO-Bucharest-2394916-hflv
-        - SG-Singapore-791737-hydo
-        - US-Los Angeles-28193-hhlh
-        - HK-Hong Kong-4281635-hyyl
-        - RO-Bucharest-2394916-hyog
-        - RO-Bucharest-2394917-hfll
-        - GB-London-h-325524617-hyaa
-        - RO-Bucharest-2394922-hfli
-        - KR-Seoul-42815625-holh
-        - DE-Frankfurt am Main-h-771299-hhld
-        - US-New York City-6146594-hyfl
-        - CA-Ville-Marie-711417220-hyfo
-        - JP-Narita-4281629-hyvf
-        - GB-London-h-325524617-hyvl
-        - RO-Bucharest-2394921-hydi
-        - PL-Warsaw-3681104-hhgh
-        - KR-Seoul-42815624-hoga
-        - DE-Frankfurt am Main-01011095-hygi
-        - HK-Hong Kong-42815719-hygg
-        - CH-Lancy-2282103-hhgl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - RO-Bucharest-2394917-hoov
-        - KR-Seolcheon-428157-holv
-        - US-Los Angeles-81993522-hhay
+        - RO-Bucharest-2394920-eqqn
+        - RO-Bucharest-51331952-euev
+        - RO-Bucharest-239495-eqqe
+        - RO-Bucharest-3176842-eqvj
+        - RO-Bucharest-2394921-eqjb
+        - RO-Bucharest-3176842-eqmq
+        - RO-Bucharest-3176842-eqii
+        - US-North Bergen-4482913-exmm
+        - RO-Bucharest-2394921-eqbj
+        - NL-Rotterdam-h-04918519-exin
+        - ZA-Johannesburg-915116019-exjm
+        - RO-Bucharest-3176842-exnj
+        - US-East Los Angeles-4281655-exib
+        - RO-Bucharest-2394922-exnn
+        - RO-Bucharest-2394922-exnv
+        - RO-Bucharest-3176841-equb
+        - RO-Bucharest-2394921-exbq
+        - RO-Bucharest-2394921-eqvn
+        - US-New York City-6146594-exbj
+        - RO-Sector 2-2391416-eqev
+        - RO-Bucharest-2394918-eqxb
+        - US-New York City-6146594-exbe
+        - RO-Bucharest-2394918-eqen
+        - US-East Los Angeles-4281655-exmb
+        - RO-Bucharest-2394919-eqjv
+        - RO-Bucharest-2394917-eqeq
+        - RO-Bucharest-2394916-eqmn
+        - US-New York City-614659-exnx
+        - RO-Bucharest-2394925-eqjj
+        - RO-Bucharest-3176842-eqvv
+        - RO-Bucharest-2394919-eqxe
+        - US-East Los Angeles-42815211-euqm
+        - NL-Amsterdam-174714-evbu
+        - NL-Amsterdam-412423220-evju
+        - RO-Bucharest-2394925-evji
+        - NL-Haarlem-15922519-evjb
+        - RO-Sector 2-2391414-eqxm
+        - RO-Bucharest-2394918-evje
+        - RO-Bucharest-2394922-emmv
+        - US-East Los Angeles-4281655-euqi
+        - RO-Bucharest-3176843-eujv
+        - PL-Warsaw-3681104-euie
+        - ES-Jaca-04910-emqn
+        - RO-Bucharest-2394915-exbm
+        - NL-Amsterdam-174714-eqje
+        - RO-Bucharest-239494-exne
+        - RO-Bucharest-239495-evee
+        - US-East Los Angeles-42815822-exix
+        - RO-Bucharest-239495-equu
+        - US-New York City-614659-euju
         - "🇭🇰 香港 01 [V]"
         - "🇭🇰 香港 02 [V]"
         - "🇭🇰 香港 03 [V]"
@@ -657,132 +638,639 @@ proxy-groups:
     - name: "💬 即时通讯"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🌐 社交媒体"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "📞 Talkatone"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🚀 GitHub"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
+        - "🎯 全球直连"
       type: select
     - name: "🤖 ChatGPT"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🤖 Copilot"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🤖 AI服务"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎶 TikTok"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "📹 YouTube"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎥 Netflix"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎥 DisneyPlus"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎥 HBO"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎥 PrimeVideo"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎥 AppleTV+"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇸🇬 新加坡节点"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
+        - "🎯 全球直连"
       type: select
     - name: "🎥 Emby"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🎯 全球直连"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎻 Spotify"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🎯 全球直连"
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "📺 Bahamut"
       proxies:
         - "🇼🇸 台湾节点"
+        - "🚀 手动选择"
+        - "🎯 全球直连"
       type: select
     - name: "🌎 国外媒体"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🛒 国外电商"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "📢 谷歌FCM"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🇬 谷歌服务"
       proxies:
         - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🍎 苹果服务"
       proxies:
         - "🎯 全球直连"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: Ⓜ️ 微软服务
       proxies:
         - "🎯 全球直连"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "💾 OneDrive"
       proxies:
         - "🎯 全球直连"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "💳 PayPal"
       proxies:
         - "🎯 全球直连"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎮 游戏平台"
       proxies:
         - "🎯 全球直连"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🎮 Steam"
       proxies:
         - "🎯 全球直连"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: ⏬ PT站点
       proxies:
         - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🎯 全球直连"
       type: select
     - name: "🚀 测速工具"
       proxies:
         - "🎯 全球直连"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🐟 漏网之鱼"
       proxies:
         - "🎯 全球直连"
+        - "🚀 手动选择"
+        - ♻️ 自动选择
+        - "🇭🇰 香港节点"
+        - "🇺🇸 美国节点"
+        - "🇯🇵 日本节点"
+        - "🇸🇬 新加坡节点"
+        - "🇼🇸 台湾节点"
+        - "🇰🇷 韩国节点"
+        - "🇨🇦 加拿大节点"
+        - "🇬🇧 英国节点"
+        - "🇫🇷 法国节点"
+        - "🇩🇪 德国节点"
+        - "🇳🇱 荷兰节点"
+        - "🇹🇷 土耳其节点"
+        - "🇷🇺 俄罗斯节点"
+        - "🌐 其他地区"
+        - "🏠 家宽节点"
+        - "🐢 低倍率节点"
       type: select
     - name: "🔀 非标端口"
       proxies:
         - "🐟 漏网之鱼"
+        - "🎯 全球直连"
       type: select
     - interval: 300
       name: "🇭🇰 香港节点"
       proxies:
-        - HK-Hong Kong-4281635-hyyl
-        - HK-Hong Kong-42815719-hygg
         - "🇭🇰 香港 01 [V]"
         - "🇭🇰 香港 02 [V]"
         - "🇭🇰 香港 03 [V]"
@@ -793,19 +1281,16 @@ proxy-groups:
     - interval: 300
       name: "🇺🇸 美国节点"
       proxies:
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - US-Los Angeles-81993519-hygv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - US-Los Angeles-81993520-hyda
-        - US-Los Angeles-28193-hhlh
-        - US-New York City-6146594-hyfl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - US-Los Angeles-81993522-hhay
+        - US-North Bergen-4482913-exmm
+        - US-East Los Angeles-4281655-exib
+        - US-New York City-6146594-exbj
+        - US-New York City-6146594-exbe
+        - US-East Los Angeles-4281655-exmb
+        - US-New York City-614659-exnx
+        - US-East Los Angeles-42815211-euqm
+        - US-East Los Angeles-4281655-euqi
+        - US-East Los Angeles-42815822-exix
+        - US-New York City-614659-euju
         - "🇺🇸 美国 01 [V]"
         - "🇺🇸 美国 02 [V]"
         - "🇺🇸 美国 03 [V]"
@@ -815,84 +1300,16 @@ proxy-groups:
     - interval: 300
       name: "🇯🇵 日本节点"
       proxies:
-        - GB-London-h-51415624-hvdg
-        - GB-Erith-h-8922913-hyfy
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - RO-Bucharest-2394920-hovl
-        - US-Los Angeles-81993519-hygv
-        - PL-Warsaw-4591863-hyvd
-        - RO-Bucharest-3176843-hfaa
-        - NL-Amsterdam-174714-hhaf
-        - RO-Bucharest-2394915-hfah
-        - JP-Tokyo-2871948-hydv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - GB-Erith-h-8922913-hyhi
-        - GB-London-h-325524617-hogy
-        - RO-Bucharest-2394917-hfgy
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - US-Los Angeles-81993520-hyda
-        - RO-Bucharest-2394919-hyal
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - RO-Bucharest-2394916-hflv
-        - SG-Singapore-791737-hydo
-        - US-Los Angeles-28193-hhlh
-        - HK-Hong Kong-4281635-hyyl
-        - RO-Bucharest-2394916-hyog
-        - RO-Bucharest-2394917-hfll
-        - GB-London-h-325524617-hyaa
-        - RO-Bucharest-2394922-hfli
-        - KR-Seoul-42815625-holh
-        - DE-Frankfurt am Main-h-771299-hhld
-        - US-New York City-6146594-hyfl
-        - CA-Ville-Marie-711417220-hyfo
-        - JP-Narita-4281629-hyvf
-        - GB-London-h-325524617-hyvl
-        - RO-Bucharest-2394921-hydi
-        - PL-Warsaw-3681104-hhgh
-        - KR-Seoul-42815624-hoga
-        - DE-Frankfurt am Main-01011095-hygi
-        - HK-Hong Kong-42815719-hygg
-        - CH-Lancy-2282103-hhgl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - RO-Bucharest-2394917-hoov
-        - KR-Seolcheon-428157-holv
-        - US-Los Angeles-81993522-hhay
-        - "🇭🇰 香港 01 [V]"
-        - "🇭🇰 香港 02 [V]"
-        - "🇭🇰 香港 03 [V]"
-        - "🇭🇰 香港 04 [V]"
-        - "🇭🇰 香港 05 [V]"
-        - "🇸🇬 新加坡 01 [V]"
-        - "🇸🇬 新加坡 02 [V]"
-        - "🇸🇬 新加坡 03 [V]"
-        - "🇸🇬 新加坡 04 [V]"
-        - "🇸🇬 新加坡 05 [V]"
         - "🇯🇵 日本 01 [V]"
         - "🇯🇵 日本 02 [V]"
         - "🇯🇵 日本 03 [V]"
         - "🇯🇵 日本 04 [V]"
         - "🇯🇵 日本 05 [V]"
-        - "🇺🇸 美国 01 [V]"
-        - "🇺🇸 美国 02 [V]"
-        - "🇺🇸 美国 03 [V]"
-        - "🇺🇸 美国 04 [V]"
-        - "🇨🇦 加拿大 01 [V]"
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇸🇬 新加坡节点"
       proxies:
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - SG-Singapore-791737-hydo
         - "🇸🇬 新加坡 01 [V]"
         - "🇸🇬 新加坡 02 [V]"
         - "🇸🇬 新加坡 03 [V]"
@@ -903,498 +1320,111 @@ proxy-groups:
     - interval: 300
       name: "🇼🇸 台湾节点"
       proxies:
-        - GB-London-h-51415624-hvdg
-        - GB-Erith-h-8922913-hyfy
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - RO-Bucharest-2394920-hovl
-        - US-Los Angeles-81993519-hygv
-        - PL-Warsaw-4591863-hyvd
-        - RO-Bucharest-3176843-hfaa
-        - NL-Amsterdam-174714-hhaf
-        - RO-Bucharest-2394915-hfah
-        - JP-Tokyo-2871948-hydv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - GB-Erith-h-8922913-hyhi
-        - GB-London-h-325524617-hogy
-        - RO-Bucharest-2394917-hfgy
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - US-Los Angeles-81993520-hyda
-        - RO-Bucharest-2394919-hyal
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - RO-Bucharest-2394916-hflv
-        - SG-Singapore-791737-hydo
-        - US-Los Angeles-28193-hhlh
-        - HK-Hong Kong-4281635-hyyl
-        - RO-Bucharest-2394916-hyog
-        - RO-Bucharest-2394917-hfll
-        - GB-London-h-325524617-hyaa
-        - RO-Bucharest-2394922-hfli
-        - KR-Seoul-42815625-holh
-        - DE-Frankfurt am Main-h-771299-hhld
-        - US-New York City-6146594-hyfl
-        - CA-Ville-Marie-711417220-hyfo
-        - JP-Narita-4281629-hyvf
-        - GB-London-h-325524617-hyvl
-        - RO-Bucharest-2394921-hydi
-        - PL-Warsaw-3681104-hhgh
-        - KR-Seoul-42815624-hoga
-        - DE-Frankfurt am Main-01011095-hygi
-        - HK-Hong Kong-42815719-hygg
-        - CH-Lancy-2282103-hhgl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - RO-Bucharest-2394917-hoov
-        - KR-Seolcheon-428157-holv
-        - US-Los Angeles-81993522-hhay
-        - "🇭🇰 香港 01 [V]"
-        - "🇭🇰 香港 02 [V]"
-        - "🇭🇰 香港 03 [V]"
-        - "🇭🇰 香港 04 [V]"
-        - "🇭🇰 香港 05 [V]"
-        - "🇸🇬 新加坡 01 [V]"
-        - "🇸🇬 新加坡 02 [V]"
-        - "🇸🇬 新加坡 03 [V]"
-        - "🇸🇬 新加坡 04 [V]"
-        - "🇸🇬 新加坡 05 [V]"
-        - "🇯🇵 日本 01 [V]"
-        - "🇯🇵 日本 02 [V]"
-        - "🇯🇵 日本 03 [V]"
-        - "🇯🇵 日本 04 [V]"
-        - "🇯🇵 日本 05 [V]"
-        - "🇺🇸 美国 01 [V]"
-        - "🇺🇸 美国 02 [V]"
-        - "🇺🇸 美国 03 [V]"
-        - "🇺🇸 美国 04 [V]"
-        - "🇨🇦 加拿大 01 [V]"
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇰🇷 韩国节点"
       proxies:
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - KR-Seoul-42815625-holh
-        - KR-Seoul-42815624-hoga
-        - KR-Seolcheon-428157-holv
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇨🇦 加拿大节点"
       proxies:
-        - CA-Ville-Marie-711417220-hyfo
         - "🇨🇦 加拿大 01 [V]"
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇬🇧 英国节点"
       proxies:
-        - GB-London-h-51415624-hvdg
-        - GB-Erith-h-8922913-hyfy
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - RO-Bucharest-2394920-hovl
-        - US-Los Angeles-81993519-hygv
-        - PL-Warsaw-4591863-hyvd
-        - RO-Bucharest-3176843-hfaa
-        - NL-Amsterdam-174714-hhaf
-        - RO-Bucharest-2394915-hfah
-        - JP-Tokyo-2871948-hydv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - GB-Erith-h-8922913-hyhi
-        - GB-London-h-325524617-hogy
-        - RO-Bucharest-2394917-hfgy
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - US-Los Angeles-81993520-hyda
-        - RO-Bucharest-2394919-hyal
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - RO-Bucharest-2394916-hflv
-        - SG-Singapore-791737-hydo
-        - US-Los Angeles-28193-hhlh
-        - HK-Hong Kong-4281635-hyyl
-        - RO-Bucharest-2394916-hyog
-        - RO-Bucharest-2394917-hfll
-        - GB-London-h-325524617-hyaa
-        - RO-Bucharest-2394922-hfli
-        - KR-Seoul-42815625-holh
-        - DE-Frankfurt am Main-h-771299-hhld
-        - US-New York City-6146594-hyfl
-        - CA-Ville-Marie-711417220-hyfo
-        - JP-Narita-4281629-hyvf
-        - GB-London-h-325524617-hyvl
-        - RO-Bucharest-2394921-hydi
-        - PL-Warsaw-3681104-hhgh
-        - KR-Seoul-42815624-hoga
-        - DE-Frankfurt am Main-01011095-hygi
-        - HK-Hong Kong-42815719-hygg
-        - CH-Lancy-2282103-hhgl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - RO-Bucharest-2394917-hoov
-        - KR-Seolcheon-428157-holv
-        - US-Los Angeles-81993522-hhay
-        - "🇭🇰 香港 01 [V]"
-        - "🇭🇰 香港 02 [V]"
-        - "🇭🇰 香港 03 [V]"
-        - "🇭🇰 香港 04 [V]"
-        - "🇭🇰 香港 05 [V]"
-        - "🇸🇬 新加坡 01 [V]"
-        - "🇸🇬 新加坡 02 [V]"
-        - "🇸🇬 新加坡 03 [V]"
-        - "🇸🇬 新加坡 04 [V]"
-        - "🇸🇬 新加坡 05 [V]"
-        - "🇯🇵 日本 01 [V]"
-        - "🇯🇵 日本 02 [V]"
-        - "🇯🇵 日本 03 [V]"
-        - "🇯🇵 日本 04 [V]"
-        - "🇯🇵 日本 05 [V]"
-        - "🇺🇸 美国 01 [V]"
-        - "🇺🇸 美国 02 [V]"
-        - "🇺🇸 美国 03 [V]"
-        - "🇺🇸 美国 04 [V]"
-        - "🇨🇦 加拿大 01 [V]"
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇫🇷 法国节点"
       proxies:
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - DE-Frankfurt am Main-h-771299-hhld
-        - DE-Frankfurt am Main-01011095-hygi
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇩🇪 德国节点"
       proxies:
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - DE-Frankfurt am Main-h-771299-hhld
-        - DE-Frankfurt am Main-01011095-hygi
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇳🇱 荷兰节点"
       proxies:
-        - NL-Amsterdam-174714-hhaf
+        - NL-Rotterdam-h-04918519-exin
+        - NL-Amsterdam-174714-evbu
+        - NL-Amsterdam-412423220-evju
+        - NL-Haarlem-15922519-evjb
+        - NL-Amsterdam-174714-eqje
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇹🇷 土耳其节点"
       proxies:
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - DE-Frankfurt am Main-h-771299-hhld
-        - DE-Frankfurt am Main-01011095-hygi
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🇷🇺 俄罗斯节点"
       proxies:
-        - GB-London-h-51415624-hvdg
-        - GB-Erith-h-8922913-hyfy
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - RO-Bucharest-2394920-hovl
-        - US-Los Angeles-81993519-hygv
-        - PL-Warsaw-4591863-hyvd
-        - RO-Bucharest-3176843-hfaa
-        - NL-Amsterdam-174714-hhaf
-        - RO-Bucharest-2394915-hfah
-        - JP-Tokyo-2871948-hydv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - GB-Erith-h-8922913-hyhi
-        - GB-London-h-325524617-hogy
-        - RO-Bucharest-2394917-hfgy
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - US-Los Angeles-81993520-hyda
-        - RO-Bucharest-2394919-hyal
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - RO-Bucharest-2394916-hflv
-        - SG-Singapore-791737-hydo
-        - US-Los Angeles-28193-hhlh
-        - HK-Hong Kong-4281635-hyyl
-        - RO-Bucharest-2394916-hyog
-        - RO-Bucharest-2394917-hfll
-        - GB-London-h-325524617-hyaa
-        - RO-Bucharest-2394922-hfli
-        - KR-Seoul-42815625-holh
-        - DE-Frankfurt am Main-h-771299-hhld
-        - US-New York City-6146594-hyfl
-        - CA-Ville-Marie-711417220-hyfo
-        - JP-Narita-4281629-hyvf
-        - GB-London-h-325524617-hyvl
-        - RO-Bucharest-2394921-hydi
-        - PL-Warsaw-3681104-hhgh
-        - KR-Seoul-42815624-hoga
-        - DE-Frankfurt am Main-01011095-hygi
-        - HK-Hong Kong-42815719-hygg
-        - CH-Lancy-2282103-hhgl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - RO-Bucharest-2394917-hoov
-        - KR-Seolcheon-428157-holv
-        - US-Los Angeles-81993522-hhay
-        - "🇭🇰 香港 01 [V]"
-        - "🇭🇰 香港 02 [V]"
-        - "🇭🇰 香港 03 [V]"
-        - "🇭🇰 香港 04 [V]"
-        - "🇭🇰 香港 05 [V]"
-        - "🇸🇬 新加坡 01 [V]"
-        - "🇸🇬 新加坡 02 [V]"
-        - "🇸🇬 新加坡 03 [V]"
-        - "🇸🇬 新加坡 04 [V]"
-        - "🇸🇬 新加坡 05 [V]"
-        - "🇯🇵 日本 01 [V]"
-        - "🇯🇵 日本 02 [V]"
-        - "🇯🇵 日本 03 [V]"
-        - "🇯🇵 日本 04 [V]"
-        - "🇯🇵 日本 05 [V]"
-        - "🇺🇸 美国 01 [V]"
-        - "🇺🇸 美国 02 [V]"
-        - "🇺🇸 美国 03 [V]"
-        - "🇺🇸 美国 04 [V]"
-        - "🇨🇦 加拿大 01 [V]"
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🌐 其他地区"
       proxies:
-        - GB-London-h-51415624-hvdg
-        - GB-Erith-h-8922913-hyfy
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - RO-Bucharest-2394920-hovl
-        - US-Los Angeles-81993519-hygv
-        - PL-Warsaw-4591863-hyvd
-        - RO-Bucharest-3176843-hfaa
-        - NL-Amsterdam-174714-hhaf
-        - RO-Bucharest-2394915-hfah
-        - JP-Tokyo-2871948-hydv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - GB-Erith-h-8922913-hyhi
-        - GB-London-h-325524617-hogy
-        - RO-Bucharest-2394917-hfgy
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - US-Los Angeles-81993520-hyda
-        - RO-Bucharest-2394919-hyal
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - RO-Bucharest-2394916-hflv
-        - SG-Singapore-791737-hydo
-        - US-Los Angeles-28193-hhlh
-        - HK-Hong Kong-4281635-hyyl
-        - RO-Bucharest-2394916-hyog
-        - RO-Bucharest-2394917-hfll
-        - GB-London-h-325524617-hyaa
-        - RO-Bucharest-2394922-hfli
-        - KR-Seoul-42815625-holh
-        - DE-Frankfurt am Main-h-771299-hhld
-        - US-New York City-6146594-hyfl
-        - CA-Ville-Marie-711417220-hyfo
-        - JP-Narita-4281629-hyvf
-        - GB-London-h-325524617-hyvl
-        - RO-Bucharest-2394921-hydi
-        - PL-Warsaw-3681104-hhgh
-        - KR-Seoul-42815624-hoga
-        - DE-Frankfurt am Main-01011095-hygi
-        - HK-Hong Kong-42815719-hygg
-        - CH-Lancy-2282103-hhgl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - RO-Bucharest-2394917-hoov
-        - KR-Seolcheon-428157-holv
-        - US-Los Angeles-81993522-hhay
-        - "🇭🇰 香港 01 [V]"
-        - "🇭🇰 香港 02 [V]"
-        - "🇭🇰 香港 03 [V]"
-        - "🇭🇰 香港 04 [V]"
-        - "🇭🇰 香港 05 [V]"
-        - "🇸🇬 新加坡 01 [V]"
-        - "🇸🇬 新加坡 02 [V]"
-        - "🇸🇬 新加坡 03 [V]"
-        - "🇸🇬 新加坡 04 [V]"
-        - "🇸🇬 新加坡 05 [V]"
-        - "🇯🇵 日本 01 [V]"
-        - "🇯🇵 日本 02 [V]"
-        - "🇯🇵 日本 03 [V]"
-        - "🇯🇵 日本 04 [V]"
-        - "🇯🇵 日本 05 [V]"
-        - "🇺🇸 美国 01 [V]"
-        - "🇺🇸 美国 02 [V]"
-        - "🇺🇸 美国 03 [V]"
-        - "🇺🇸 美国 04 [V]"
-        - "🇨🇦 加拿大 01 [V]"
+        - RO-Bucharest-2394920-eqqn
+        - RO-Bucharest-51331952-euev
+        - RO-Bucharest-239495-eqqe
+        - RO-Bucharest-3176842-eqvj
+        - RO-Bucharest-2394921-eqjb
+        - RO-Bucharest-3176842-eqmq
+        - RO-Bucharest-3176842-eqii
+        - RO-Bucharest-2394921-eqbj
+        - ZA-Johannesburg-915116019-exjm
+        - RO-Bucharest-3176842-exnj
+        - RO-Bucharest-2394922-exnn
+        - RO-Bucharest-2394922-exnv
+        - RO-Bucharest-3176841-equb
+        - RO-Bucharest-2394921-exbq
+        - RO-Bucharest-2394921-eqvn
+        - RO-Sector 2-2391416-eqev
+        - RO-Bucharest-2394918-eqxb
+        - RO-Bucharest-2394918-eqen
+        - RO-Bucharest-2394919-eqjv
+        - RO-Bucharest-2394917-eqeq
+        - RO-Bucharest-2394916-eqmn
+        - RO-Bucharest-2394925-eqjj
+        - RO-Bucharest-3176842-eqvv
+        - RO-Bucharest-2394919-eqxe
+        - RO-Bucharest-2394925-evji
+        - RO-Sector 2-2391414-eqxm
+        - RO-Bucharest-2394918-evje
+        - RO-Bucharest-2394922-emmv
+        - RO-Bucharest-3176843-eujv
+        - PL-Warsaw-3681104-euie
+        - ES-Jaca-04910-emqn
+        - RO-Bucharest-2394915-exbm
+        - RO-Bucharest-239494-exne
+        - RO-Bucharest-239495-evee
+        - RO-Bucharest-239495-equu
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🏠 家宽节点"
       proxies:
-        - GB-London-h-51415624-hvdg
-        - GB-Erith-h-8922913-hyfy
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - RO-Bucharest-2394920-hovl
-        - US-Los Angeles-81993519-hygv
-        - PL-Warsaw-4591863-hyvd
-        - RO-Bucharest-3176843-hfaa
-        - NL-Amsterdam-174714-hhaf
-        - RO-Bucharest-2394915-hfah
-        - JP-Tokyo-2871948-hydv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - GB-Erith-h-8922913-hyhi
-        - GB-London-h-325524617-hogy
-        - RO-Bucharest-2394917-hfgy
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - US-Los Angeles-81993520-hyda
-        - RO-Bucharest-2394919-hyal
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - RO-Bucharest-2394916-hflv
-        - SG-Singapore-791737-hydo
-        - US-Los Angeles-28193-hhlh
-        - HK-Hong Kong-4281635-hyyl
-        - RO-Bucharest-2394916-hyog
-        - RO-Bucharest-2394917-hfll
-        - GB-London-h-325524617-hyaa
-        - RO-Bucharest-2394922-hfli
-        - KR-Seoul-42815625-holh
-        - DE-Frankfurt am Main-h-771299-hhld
-        - US-New York City-6146594-hyfl
-        - CA-Ville-Marie-711417220-hyfo
-        - JP-Narita-4281629-hyvf
-        - GB-London-h-325524617-hyvl
-        - RO-Bucharest-2394921-hydi
-        - PL-Warsaw-3681104-hhgh
-        - KR-Seoul-42815624-hoga
-        - DE-Frankfurt am Main-01011095-hygi
-        - HK-Hong Kong-42815719-hygg
-        - CH-Lancy-2282103-hhgl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - RO-Bucharest-2394917-hoov
-        - KR-Seolcheon-428157-holv
-        - US-Los Angeles-81993522-hhay
-        - "🇭🇰 香港 01 [V]"
-        - "🇭🇰 香港 02 [V]"
-        - "🇭🇰 香港 03 [V]"
-        - "🇭🇰 香港 04 [V]"
-        - "🇭🇰 香港 05 [V]"
-        - "🇸🇬 新加坡 01 [V]"
-        - "🇸🇬 新加坡 02 [V]"
-        - "🇸🇬 新加坡 03 [V]"
-        - "🇸🇬 新加坡 04 [V]"
-        - "🇸🇬 新加坡 05 [V]"
-        - "🇯🇵 日本 01 [V]"
-        - "🇯🇵 日本 02 [V]"
-        - "🇯🇵 日本 03 [V]"
-        - "🇯🇵 日本 04 [V]"
-        - "🇯🇵 日本 05 [V]"
-        - "🇺🇸 美国 01 [V]"
-        - "🇺🇸 美国 02 [V]"
-        - "🇺🇸 美国 03 [V]"
-        - "🇺🇸 美国 04 [V]"
-        - "🇨🇦 加拿大 01 [V]"
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - interval: 300
       name: "🐢 低倍率节点"
       proxies:
-        - GB-London-h-51415624-hvdg
-        - GB-Erith-h-8922913-hyfy
-        - SG-Singapore-4281632-hyyi
-        - SG-Singapore-7925311-hhgi
-        - US-New York City-6146591-hygd
-        - US-Los Angeles-81993520-hfhh
-        - US-San Jose-42815217-hoay
-        - US-Los Angeles-81993521-hhal
-        - RO-Bucharest-2394920-hovl
-        - US-Los Angeles-81993519-hygv
-        - PL-Warsaw-4591863-hyvd
-        - RO-Bucharest-3176843-hfaa
-        - NL-Amsterdam-174714-hhaf
-        - RO-Bucharest-2394915-hfah
-        - JP-Tokyo-2871948-hydv
-        - US-Los Angeles-81993521-hfho
-        - US-Los Angeles-81993520-hygh
-        - GB-Erith-h-8922913-hyhi
-        - GB-London-h-325524617-hogy
-        - RO-Bucharest-2394917-hfgy
-        - DE-Frankfurt am Main-h-1595320-hhgo
-        - US-Los Angeles-81993520-hyda
-        - RO-Bucharest-2394919-hyal
-        - KR-Yongin-si (Cheoin-gu)-11694611-hoad
-        - KR-Yongin-si (Cheoin-gu)-11694611-hyhd
-        - RO-Bucharest-2394916-hflv
-        - SG-Singapore-791737-hydo
-        - US-Los Angeles-28193-hhlh
-        - HK-Hong Kong-4281635-hyyl
-        - RO-Bucharest-2394916-hyog
-        - RO-Bucharest-2394917-hfll
-        - GB-London-h-325524617-hyaa
-        - RO-Bucharest-2394922-hfli
-        - KR-Seoul-42815625-holh
-        - DE-Frankfurt am Main-h-771299-hhld
-        - US-New York City-6146594-hyfl
-        - CA-Ville-Marie-711417220-hyfo
-        - JP-Narita-4281629-hyvf
-        - GB-London-h-325524617-hyvl
-        - RO-Bucharest-2394921-hydi
-        - PL-Warsaw-3681104-hhgh
-        - KR-Seoul-42815624-hoga
-        - DE-Frankfurt am Main-01011095-hygi
-        - HK-Hong Kong-42815719-hygg
-        - CH-Lancy-2282103-hhgl
-        - US-Dallas-2384211-hfva
-        - US-Los Angeles-81993520-hhao
-        - RO-Bucharest-2394917-hoov
-        - KR-Seolcheon-428157-holv
-        - US-Los Angeles-81993522-hhay
-        - "🇭🇰 香港 01 [V]"
-        - "🇭🇰 香港 02 [V]"
-        - "🇭🇰 香港 03 [V]"
-        - "🇭🇰 香港 04 [V]"
-        - "🇭🇰 香港 05 [V]"
-        - "🇸🇬 新加坡 01 [V]"
-        - "🇸🇬 新加坡 02 [V]"
-        - "🇸🇬 新加坡 03 [V]"
-        - "🇸🇬 新加坡 04 [V]"
-        - "🇸🇬 新加坡 05 [V]"
-        - "🇯🇵 日本 01 [V]"
-        - "🇯🇵 日本 02 [V]"
-        - "🇯🇵 日本 03 [V]"
-        - "🇯🇵 日本 04 [V]"
-        - "🇯🇵 日本 05 [V]"
-        - "🇺🇸 美国 01 [V]"
-        - "🇺🇸 美国 02 [V]"
-        - "🇺🇸 美国 03 [V]"
-        - "🇺🇸 美国 04 [V]"
-        - "🇨🇦 加拿大 01 [V]"
+        - ♻️ 自动选择
       type: url-test
       url: https://cp.cloudflare.com/generate_204
     - name: "🎯 全球直连"

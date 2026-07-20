@@ -30,6 +30,7 @@ type Profile struct {
 type Source struct {
 	Name         string `yaml:"name"`
 	URL          string `yaml:"url"`
+	Enabled      *bool  `yaml:"enabled,omitempty"`
 	Cookie       string `yaml:"cookie,omitempty"`
 	UserAgent    string `yaml:"user-agent,omitempty"`
 	RefreshCron  string `yaml:"refresh-cron,omitempty"`
@@ -78,6 +79,13 @@ func Load(path string) (*Config, error) {
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
+	}
+	// Default: sources are enabled unless explicitly set to false
+	for i := range cfg.Sources {
+		if cfg.Sources[i].Enabled == nil {
+			trueVal := true
+			cfg.Sources[i].Enabled = &trueVal
+		}
 	}
 	return &cfg, nil
 }

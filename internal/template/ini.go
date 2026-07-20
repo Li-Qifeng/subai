@@ -139,8 +139,8 @@ func parseCustomProxyGroup(line string) (*ProxyGroup, error) {
 				member := strings.TrimPrefix(arg, "[]")
 				pg.Proxies = append(pg.Proxies, member)
 			} else if arg == ".*" {
-				// All proxies - handled by enrichment
-				// No need to add as member
+				// All proxies fallback - add * to be expanded during Build
+				pg.Proxies = append(pg.Proxies, "*")
 			}
 		}
 	case "url-test", "fallback":

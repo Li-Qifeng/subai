@@ -1,10 +1,4 @@
-2026/07/20 04:27:52 subai server listening on :8088
-2026/07/20 04:27:52   auto-refresh: every 6h0m0s
-2026/07/20 04:27:52   webhooks: 1 configured
-2026/07/20 04:27:52   output: /root/subai/output/clash.yaml
-2026/07/20 04:27:57 parse source "kitty": unable to detect input format
-2026/07/20 04:27:57 cache: parse raw cache for "kitty": unable to detect input format
-2026/07/20 04:28:01 parse source "xfltd": unable to detect input format
-2026/07/20 04:28:01   loaded 20 cached proxies for "xfltd" from disk
-2026/07/20 04:28:01   using cached 20 proxies for "xfltd"
-2026/07/20 04:28:01   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 17:13:52 subai server listening on :8088
+2026/07/20 17:13:52   auto-refresh: every 6h0m0s
+2026/07/20 17:13:52   webhooks: 1 configured
+2026/07/20 17:13:52   output: /root/subai/output/clash.yaml
