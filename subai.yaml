@@ -2,6 +2,7 @@ sources:
     - name: kitty
       url: https://kaze1.aisaka-taiga.com/oosaka/a56e90805fd667daa53bfa6c0143d4bf
     - name: qzz
+      enabled: false
       url: https://234.qzz.io/fsllist64
     - name: xfltd
       url: https://apikey.xfltd.click/cctv/user/client/get?token=MzMxODU5OmNjNThiNWVmZmQ1Yzg3ZTNhMjk5M2FkMTllZDQxY2IzNGI0YjM3Nzk

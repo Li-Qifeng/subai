@@ -141,12 +141,17 @@ func Build(cfg *Config, proxies []parser.Proxy) *BuildResult {
 		RuleProviders: []map[string]interface{}{},
 	}
 
-	allNames := make([]string, len(proxies))
-	for i, p := range proxies {
+	allNames := make([]string, 0, len(proxies))
+	for _, p := range proxies {
+		// Skip traffic info / placeholder nodes that aren't real proxies
+		if p.Server == "" && p.Port == 0 {
+			log.Printf("  skipping traffic info node: %q", p.Name)
+			continue
+		}
 		if p.Name != "" {
-			allNames[i] = p.Name
+			allNames = append(allNames, p.Name)
 		} else {
-			allNames[i] = fmt.Sprintf("%s-%d", p.Server, p.Port)
+			allNames = append(allNames, fmt.Sprintf("%s-%d", p.Server, p.Port))
 		}
 	}
 
@@ -342,6 +347,9 @@ func enrichProxyGroups(result *BuildResult, allNames []string) {
 		} else {
 			otherGroup["proxies"] = []string{}
 		}
+		// Always prepend ♻️ 自动选择 as fallback for 其他地区
+		// to ensure Clash has at least one valid member for url-test
+		otherGroup["proxies"] = append([]string{"♻️ 自动选择"}, otherGroup["proxies"].([]string)...)
 	}
 
 	// Enrich select-type service groups that have only 1 member

@@ -1,4 +1,17 @@
-2026/07/20 17:13:52 subai server listening on :8088
-2026/07/20 17:13:52   auto-refresh: every 6h0m0s
-2026/07/20 17:13:52   webhooks: 1 configured
-2026/07/20 17:13:52   output: /root/subai/output/clash.yaml
+2026/07/20 20:46:13 subai server listening on :8088
+2026/07/20 20:46:13   auto-refresh: every 6h0m0s
+2026/07/20 20:46:13   webhooks: 1 configured
+2026/07/20 20:46:13   output: /root/subai/output/clash.yaml
+2026/07/20 20:47:15 parse source "xfltd": unable to detect input format
+2026/07/20 20:47:15   loaded 20 cached proxies for "xfltd" from disk
+2026/07/20 20:47:15   using cached 20 proxies for "xfltd"
+2026/07/20 20:47:15   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 20:48:18 auto-refresh: starting refresh cycle
+2026/07/20 20:48:19   ⏭️  source "qzz": disabled, skipping
+2026/07/20 20:48:22 parse source "xfltd": unable to detect input format
+2026/07/20 20:48:22   loaded 20 cached proxies for "xfltd" from disk
+2026/07/20 20:48:22   using cached 20 proxies for "xfltd"
+2026/07/20 20:48:22   ⚠️  source "xfltd": using stale cache (20 proxies)
+2026/07/20 20:48:22 auto-refresh: wrote 112600 bytes to /root/subai/output/clash.yaml
+2026/07/20 20:48:22 auto-refresh: completed (55 proxies, 112600 bytes)
+2026/07/20 20:48:22 webhook: http://127.0.0.1:9999/configs?force=true — Put "http://127.0.0.1:9999/configs?force=true": dial tcp 127.0.0.1:9999: connect: connection refused
